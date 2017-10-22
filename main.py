@@ -30,6 +30,8 @@ class Game:
                            self.consts.game_field_height * self.consts.pixel_size)
 
         self.is_lmb_held = False
+        self.camera_x=0
+        self.camera_y=0
 
     def process_events(self):
         for e in pygame.event.get():
@@ -59,15 +61,13 @@ class Game:
 
         if self.is_lmb_held:
             curr_coords = pygame.mouse.get_pos()
-            self.camera.move_ip((self.coords[0] - curr_coords[0]) * (self.camera.w / self.setts.screen_width),
-                                (self.coords[1] - curr_coords[1]) * (self.camera.w / self.consts.game_field_width))
-            print((self.coords[0] - curr_coords[0]) * (self.camera.w / self.setts.screen_width),
-                  (self.coords[1] - curr_coords[1]) * (self.camera.w / self.consts.game_field_width))
+            self.camera_x+=(self.coords[0] - curr_coords[0]) * (self.camera.w / self.setts.screen_width)
+            self.camera_y+=(self.coords[1] - curr_coords[1]) * (self.camera.h / self.setts.screen_height)
             self.coords = curr_coords
 
     def draw(self):
         camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
-        camera_canvas.blit(self.canvas, (0, 0), self.camera)
+        camera_canvas.blit(self.canvas, (0, 0), Rect(self.camera_x, self.camera_y, self.camera.w, self.camera.h))
         camera_canvas = pygame.transform.scale(camera_canvas, (self.setts.screen_width, self.setts.screen_height))
         self.screen.fill((255, 255, 255))
         self.screen.blit(camera_canvas, (0, 0))
