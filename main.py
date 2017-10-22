@@ -1,73 +1,83 @@
 import pygame
 import sys
 from random import randint
-
 from pygame.rect import Rect
-
+from constants import Constants
 from settings import Settings
 
 
-def run_game():
-    pixel_size=4
-    scroll_amount = 0.1
-    upscale_limit = 40*pixel_size
-    downscale_limit = 2000*pixel_size
-    is_lmb_held = False
-    settings = Settings()
-    pygame.init()
-    screen = pygame.display.set_mode((settings.screen_width, settings.screen_height))
-    pygame.display.set_caption(settings.display_caption)
-    screen.fill(settings.bg_color)
+class Game:
+    def __init__(self):
+        pygame.init()
 
-    canvas = pygame.Surface([settings.game_field_width*pixel_size, settings.game_field_height*pixel_size]).convert_alpha()
-    canvas.fill((255, 255, 255))
-    for i in range(0, settings.game_field_width):
-        for j in range(0, settings.game_field_height):
-            pygame.draw.rect(canvas, (randint(0, 255), randint(0, 255), randint(0, 255)), (i*pixel_size, j*pixel_size, pixel_size, pixel_size))
-    camera = Rect(0, 0, settings.game_field_width*pixel_size, settings.game_field_height*pixel_size)
+        self.setts = Settings()
+        self.consts = Constants()
 
-    while True:
+        self.screen = pygame.display.set_mode((self.setts.screen_width, self.setts.screen_height))
+        pygame.display.set_caption(self.setts.display_caption)
+        self.screen.fill(self.setts.bg_color)
+
+        self.canvas = pygame.Surface(
+            [self.consts.game_field_width * self.consts.pixel_size,
+             self.consts.game_field_height * self.consts.pixel_size]).convert_alpha()
+        self.canvas.fill((255, 255, 255))
+        for i in range(0, self.consts.game_field_width):
+            for j in range(0, self.consts.game_field_height):
+                pygame.draw.rect(self.canvas, (randint(0, 255), randint(0, 255), randint(0, 255)),
+                                 (i * self.consts.pixel_size, j * self.consts.pixel_size, self.consts.pixel_size,
+                                  self.consts.pixel_size))
+        self.camera = Rect(0, 0, self.consts.game_field_width * self.consts.pixel_size,
+                           self.consts.game_field_height * self.consts.pixel_size)
+
+        self.is_lmb_held = False
+
+    def process_events(self):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 sys.exit()
-            if e.type==pygame.MOUSEMOTION and is_lmb_held:
-               pass
             if e.type == pygame.MOUSEBUTTONUP:
                 if e.button == 1:
-                    is_lmb_held = False
+                    self.is_lmb_held = False
             if e.type == pygame.MOUSEBUTTONDOWN:
                 if e.button == 1:
-                    coordinates = pygame.mouse.get_pos()
-                    is_lmb_held = True
-
-                if e.button == 4: #zoom in
-                    offset_x = -camera.w * scroll_amount
-                    offset_y = -camera.h * scroll_amount
-                    if camera.w+offset_x <= upscale_limit:
+                    self.coords = pygame.mouse.get_pos()
+                    self.is_lmb_held = True
+                if e.button == 4:  # zoom in
+                    offset_x = -self.camera.w * self.consts.scroll_amount
+                    offset_y = -self.camera.h * self.consts.scroll_amount
+                    if self.camera.w + offset_x <= self.consts.upscale_limit:
                         offset_x = 0
                         offset_y = 0
-                    camera.inflate_ip(offset_x, offset_y)
-
-                elif e.button == 5: #zoom out
-                    offset_x = camera.w * scroll_amount
-                    offset_y = camera.h * scroll_amount
-                    if camera.w+offset_x > downscale_limit:
+                    self.camera.inflate_ip(offset_x, offset_y)
+                elif e.button == 5:  # zoom out
+                    offset_x = self.camera.w * self.consts.scroll_amount
+                    offset_y = self.camera.h * self.consts.scroll_amount
+                    if self.camera.w + offset_x > self.consts.downscale_limit:
                         offset_x = 0
                         offset_y = 0
-                    camera.inflate_ip(offset_x, offset_y)
+                    self.camera.inflate_ip(offset_x, offset_y)
 
-        if is_lmb_held:
-            current_coordinates = pygame.mouse.get_pos()
-            camera.move_ip((coordinates[0]-current_coordinates[0])*(camera.w/settings.screen_width), (coordinates[1]-current_coordinates[1])*(camera.w/settings.game_field_width))
-            print((coordinates[0]-current_coordinates[0])*(camera.w/settings.screen_width), (coordinates[1]-current_coordinates[1])*(camera.w/settings.game_field_width))
-            coordinates = current_coordinates
+        if self.is_lmb_held:
+            curr_coords = pygame.mouse.get_pos()
+            self.camera.move_ip((self.coords[0] - curr_coords[0]) * (self.camera.w / self.setts.screen_width),
+                                (self.coords[1] - curr_coords[1]) * (self.camera.w / self.consts.game_field_width))
+            print((self.coords[0] - curr_coords[0]) * (self.camera.w / self.setts.screen_width),
+                  (self.coords[1] - curr_coords[1]) * (self.camera.w / self.consts.game_field_width))
+            self.coords = curr_coords
 
-        camera_canvas = pygame.Surface((camera.w, camera.h))
-        camera_canvas.blit(canvas, (0,0), camera)
-        camera_canvas=pygame.transform.scale(camera_canvas, (settings.screen_width, settings.screen_height))
-        screen.fill((255, 255, 255))
-        screen.blit(camera_canvas, (0, 0))
+    def draw(self):
+        camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
+        camera_canvas.blit(self.canvas, (0, 0), self.camera)
+        camera_canvas = pygame.transform.scale(camera_canvas, (self.setts.screen_width, self.setts.screen_height))
+        self.screen.fill((255, 255, 255))
+        self.screen.blit(camera_canvas, (0, 0))
         pygame.display.flip()
 
+    def run(self):
+        while 1:
+            self.process_events()
+            self.draw()
 
-run_game()
+
+game = Game()
+game.run()
