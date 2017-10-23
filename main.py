@@ -50,20 +50,27 @@ class Game:
                     if self.camera.w + offset_x <= self.consts.upscale_limit:
                         offset_x = 0
                         offset_y = 0
-                    self.camera.inflate_ip(offset_x, offset_y)
+                    self.inflate(offset_x, offset_y)
                 elif e.button == 5:  # zoom out
                     offset_x = self.camera.w * self.consts.scroll_amount
                     offset_y = self.camera.h * self.consts.scroll_amount
                     if self.camera.w + offset_x > self.consts.downscale_limit:
                         offset_x = 0
                         offset_y = 0
-                    self.camera.inflate_ip(offset_x, offset_y)
+                    self.inflate(offset_x, offset_y)
 
         if self.is_lmb_held:
             curr_coords = pygame.mouse.get_pos()
             self.camera_x+=(self.coords[0] - curr_coords[0]) * (self.camera.w / self.setts.screen_width)
             self.camera_y+=(self.coords[1] - curr_coords[1]) * (self.camera.h / self.setts.screen_height)
+            self.camera.__setattr__('x', self.camera_x)
+            self.camera.__setattr__('y', self.camera_y)
             self.coords = curr_coords
+
+    def inflate(self, offset_x, offset_y):
+        self.camera.inflate_ip(offset_x, offset_y)
+        self.camera_x-=offset_x/2
+        self.camera_y-=offset_y/2
 
     def draw(self):
         camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
