@@ -75,14 +75,14 @@ class Game:
             for j in range(0, Consts.game_field_height):
                 self.pixels_db.update({
                     str(i) + '/' + str(j) + '/': {
-                        "color": [randint(0, 255), randint(0, 255), randint(0, 255)]
+                        "color": [255, 255, 255]
                     }
                 }, self.user['idToken'])
         pixels_stream = self.pixels_db.stream(self.pixel_handler)
 
     def pixel_handler(self, pixel):
         print(pixel)
-        #self.canvas.set_at(pixel['x'], pixel['y'], pixel['color'])
+        # self.canvas.set_at(pixel['x'], pixel['y'], pixel['color'])
 
     def process_events(self):
         for e in pygame.event.get():
@@ -127,13 +127,16 @@ class Game:
     def conquer_pixel(self):
         x = int(self.coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
         y = int(self.coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
-        colors=(randint(0, 255), randint(0, 255), randint(0, 255))
+        colors = (randint(0, 255), randint(0, 255), randint(0, 255))
+        self.canvas.set_at((x, y), colors)
+        self.send_pixel_to_firebase((x, y), colors)
+
+    def send_pixel_to_firebase(self, dest, colors):
         self.pixels_db.update({
-            str(x) + '/' + str(y) + '/': {
+            str(dest[0]) + '/' + str(dest[1]) + '/': {
                 "color": colors
             }
         }, self.user['idToken'])
-        self.canvas.set_at((x, y), colors)
 
     def draw(self):
         self.screen.fill((255, 255, 255))
