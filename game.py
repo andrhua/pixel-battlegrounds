@@ -1,19 +1,14 @@
 from enum import Enum
-
 import pygame
 import sys
 import pyrebase
+import shelve
 from random import randint
 from pygame.rect import Rect
 from assets import Assets
 from constants import Constants as Consts
 from settings import Settings as Setts
 from ui import TextView
-
-
-class State(Enum):
-    LOGIN = 1
-    GAME = 2
 
 
 class Game:
@@ -33,7 +28,8 @@ class Game:
             [Consts.game_field_width * Consts.pixel_size,
              Consts.game_field_height * Consts.pixel_size]).convert_alpha()
         self.canvas.fill((255, 255, 255))
-        self.camera = Rect(0, 0, Consts.game_field_width * Consts.pixel_size, Consts.game_field_height * Consts.pixel_size)
+        self.camera = Rect(0, 0, Consts.game_field_width * Consts.pixel_size,
+                           Consts.game_field_height * Consts.pixel_size)
         self.is_lmb_held = False
         self.camera_x = 0
         self.camera_y = 0
@@ -55,13 +51,23 @@ class Game:
         }
 
         firebase = pyrebase.initialize_app(config)
-
         self.auth = firebase.auth()
 
-        # if auth.current_user == None:
-        #    user=auth.create_user_with_email_and_password("constantinopolskaya228@gmail.com", "chelsea17")
-        # else:
-        self.user = self.auth.sign_in_with_email_and_password("constantinopolskaya228@gmail.com", "chelsea17")
+        credentials = self.load_credentials()
+        email = credentials[0]
+        password = credentials[1]
+
+        if email is not None:
+            self.user = self.auth.sign_in_with_email_and_password(email, password)
+        else:
+            email = input("Enter email: ")
+            password = input("Enter password: ")
+            try:
+                self.user = self.auth.create_user_with_email_and_password(email, password)
+            except:
+                self.user = self.auth.sign_in_with_email_and_password(email, password)
+            self.save_credentials(email, password)
+        print("Successfully logged in!")
 
         self.db = firebase.database()
         pixels = self.db.get(self.get_token()).val()
@@ -71,6 +77,22 @@ class Game:
                 self.canvas.set_at((i, j), colors)
         self.pixels_stream = self.db.stream(self.receive_pixel, self.get_token())
 
+    def save_credentials(self, email, password):
+        file = shelve.open('player.data')
+        file['email'] = email
+        file['password'] = password
+        file.close()
+
+    def load_credentials(self):
+        file = shelve.open('player.data')
+        email=None
+        password=None
+        if 'email' in file:
+            email = file['email']
+            password = file['password']
+        file.close()
+        return email, password
+
     def receive_pixel(self, pixel):
         self.count += 1
         if self.count > 1:
@@ -78,8 +100,27 @@ class Game:
             dest = (int(data[0]), int(data[1]))
             self.canvas.set_at(dest, list(pixel['data'].values())[0]['color'])
 
+    def conquer_pixel(self):
+        x = int(self.coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
+        y = int(self.coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
+        colors = (randint(0, 255), randint(0, 255), randint(0, 255))
+        self.send_pixel((x, y), colors)
+
+    def send_pixel(self, dest, colors):
+        self.db.update({
+            str(dest[0]) + '/' + str(dest[1]) + '/': {
+                "color": colors
+            }
+        }, self.get_token())
+
     def get_token(self):
         return self.user['idToken']
+
+    def update_user_token(self):
+        self.passed_time += self.clock.tick()
+        if self.passed_time > 55 * 60 * 1000:  # update token every 55 minutes
+            self.auth.refresh(self.user['refreshToken'])
+            self.passed_time = 0
 
     def process_events(self):
         for e in pygame.event.get():
@@ -121,19 +162,6 @@ class Game:
         self.camera_x -= offset_x / 2
         self.camera_y -= offset_y / 2
 
-    def conquer_pixel(self):
-        x = int(self.coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
-        y = int(self.coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
-        colors = (randint(0, 255), randint(0, 255), randint(0, 255))
-        self.send_pixel((x, y), colors)
-
-    def send_pixel(self, dest, colors):
-        self.db.update({
-            str(dest[0]) + '/' + str(dest[1]) + '/': {
-                "color": colors
-            }
-        }, self.get_token())
-
     def draw(self):
         self.screen.fill((255, 255, 255))
         if self.state == State.GAME:
@@ -146,12 +174,6 @@ class Game:
 
         pygame.display.flip()
 
-    def update_user_token(self):
-        self.passed_time += self.clock.tick()
-        if self.passed_time > 55 * 60 * 1000:  # update token every 55 minutes
-            self.auth.refresh(self.user['refreshToken'])
-            self.passed_time = 0
-
     def run(self):
         self.init_pyrebase()
         while 1:
@@ -160,5 +182,6 @@ class Game:
             self.draw()
 
 
-game = Game()
-game.run()
+class State(Enum):
+    LOGIN = 1
+    GAME = 2
