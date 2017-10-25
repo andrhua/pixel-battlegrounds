@@ -33,17 +33,13 @@ class Game:
             [Consts.game_field_width * Consts.pixel_size,
              Consts.game_field_height * Consts.pixel_size]).convert_alpha()
         self.canvas.fill((255, 255, 255))
-        for i in range(0, Consts.game_field_width):
-            for j in range(0, Consts.game_field_height):
-                pygame.draw.rect(self.canvas, (randint(0, 255), randint(0, 255), randint(0, 255)),
-                                 (i * Consts.pixel_size, j * Consts.pixel_size, Consts.pixel_size,
-                                  Consts.pixel_size))
-        self.camera = Rect(0, 0, Consts.game_field_width * Consts.pixel_size,
-                           Consts.game_field_height * Consts.pixel_size)
-
+        self.camera = Rect(0, 0, Consts.game_field_width * Consts.pixel_size, Consts.game_field_height * Consts.pixel_size)
         self.is_lmb_held = False
         self.camera_x = 0
         self.camera_y = 0
+        self.count = 0
+        self.passed_time = 0
+        self.clock = pygame.time.Clock()
 
         # self.testTV = TextView(500, 300, (50, 120, 200), 'dont you feel sorry for stickers', (0, 240, 240),
         #                       (50, 120, 200), (400, 200))
@@ -60,29 +56,30 @@ class Game:
 
         firebase = pyrebase.initialize_app(config)
 
-        auth = firebase.auth()
+        self.auth = firebase.auth()
 
         # if auth.current_user == None:
         #    user=auth.create_user_with_email_and_password("constantinopolskaya228@gmail.com", "chelsea17")
         # else:
-        self.user = auth.sign_in_with_email_and_password("constantinopolskaya228@gmail.com", "chelsea17")
+        self.user = self.auth.sign_in_with_email_and_password("constantinopolskaya228@gmail.com", "chelsea17")
 
         self.db = firebase.database()
-        self.pixels_db = self.db.child("pixels")
-        self.pixels_db.remove(self.user['idToken'])
-
+        pixels = self.db.get(self.get_token()).val()
         for i in range(0, Consts.game_field_width):
             for j in range(0, Consts.game_field_height):
-                self.pixels_db.update({
-                    str(i) + '/' + str(j) + '/': {
-                        "color": [255, 255, 255]
-                    }
-                }, self.user['idToken'])
-        pixels_stream = self.pixels_db.stream(self.pixel_handler)
+                colors = pixels[i][j]['color']
+                self.canvas.set_at((i, j), colors)
+        self.pixels_stream = self.db.stream(self.receive_pixel, self.get_token())
 
-    def pixel_handler(self, pixel):
-        print(pixel)
-        # self.canvas.set_at(pixel['x'], pixel['y'], pixel['color'])
+    def receive_pixel(self, pixel):
+        self.count += 1
+        if self.count > 1:
+            data = list(pixel['data'].keys())[0].split('/')
+            dest = (int(data[0]), int(data[1]))
+            self.canvas.set_at(dest, list(pixel['data'].values())[0]['color'])
+
+    def get_token(self):
+        return self.user['idToken']
 
     def process_events(self):
         for e in pygame.event.get():
@@ -98,14 +95,14 @@ class Game:
                     if self.camera.w + offset_x <= Consts.upscale_limit:
                         offset_x = 0
                         offset_y = 0
-                    self.inflate(offset_x, offset_y)
+                    self.inflate_camera(offset_x, offset_y)
                 elif e.button == 5:  # zoom out
                     offset_x = self.camera.w * Consts.scroll_amount
                     offset_y = self.camera.h * Consts.scroll_amount
                     if self.camera.w + offset_x > Consts.downscale_limit:
                         offset_x = 0
                         offset_y = 0
-                    self.inflate(offset_x, offset_y)
+                    self.inflate_camera(offset_x, offset_y)
             if e.type == pygame.MOUSEBUTTONUP:
                 if e.button == 1:
                     self.conquer_pixel()
@@ -119,7 +116,7 @@ class Game:
             self.camera.__setattr__('y', self.camera_y)
             self.coords = curr_coords
 
-    def inflate(self, offset_x, offset_y):
+    def inflate_camera(self, offset_x, offset_y):
         self.camera.inflate_ip(offset_x, offset_y)
         self.camera_x -= offset_x / 2
         self.camera_y -= offset_y / 2
@@ -128,15 +125,14 @@ class Game:
         x = int(self.coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
         y = int(self.coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
         colors = (randint(0, 255), randint(0, 255), randint(0, 255))
-        self.canvas.set_at((x, y), colors)
-        self.send_pixel_to_firebase((x, y), colors)
+        self.send_pixel((x, y), colors)
 
-    def send_pixel_to_firebase(self, dest, colors):
-        self.pixels_db.update({
+    def send_pixel(self, dest, colors):
+        self.db.update({
             str(dest[0]) + '/' + str(dest[1]) + '/': {
                 "color": colors
             }
-        }, self.user['idToken'])
+        }, self.get_token())
 
     def draw(self):
         self.screen.fill((255, 255, 255))
@@ -150,9 +146,16 @@ class Game:
 
         pygame.display.flip()
 
+    def update_user_token(self):
+        self.passed_time += self.clock.tick()
+        if self.passed_time > 55 * 60 * 1000:  # update token every 55 minutes
+            self.auth.refresh(self.user['refreshToken'])
+            self.passed_time = 0
+
     def run(self):
         self.init_pyrebase()
         while 1:
+            self.update_user_token()
             self.process_events()
             self.draw()
 
