@@ -1,5 +1,6 @@
 class Constants:
     text_regular_size = 0
+    text_logo_size=0
     pixel_size=0
     scroll_amount=0
     upscale_limit=0
@@ -15,3 +16,4 @@ class Constants:
         Constants.game_field_width = 10
         Constants.game_field_height = 5
         Constants.text_regular_size=50
+        Constants.text_logo_size=80
