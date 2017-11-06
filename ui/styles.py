@@ -8,7 +8,7 @@ class Align(Enum):
 
 
 class TextViewStyle:
-    def __init__(self, font, text_color, bg_color, align=Align.left):
+    def __init__(self, font, text_color, bg_color=None, align=Align.left):
         self.font = font
         self.text_color = text_color
         self.bg_color = bg_color

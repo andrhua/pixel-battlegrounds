@@ -1,17 +1,20 @@
-import shelve
 import asyncio
-from random import randint
-import pygame
-import sys
 import math
+import shelve
+import sys
+import threading
+import time
+
+import pygame
 from pygame.rect import Rect
-from assets import Assets
-from async import AsyncTask
-from colors import Colors
-from styles import TextViewStyle, EditTextStyle, TextButtonStyle
-from ui import TextView, EditText, Align, Palette, TextButton, LoadingView
-from settings import Settings as Setts
-from constants import Constants as Consts
+
+from assets.assets import Assets
+from assets.colors import Colors
+from ui.ui import TextView, EditText, Align, Palette, LoadingView
+from ui.styles import TextViewStyle, EditTextStyle
+from util.async import AsyncTask
+from util.constants import Constants as Consts
+from util.settings import Settings as Setts
 
 
 class Context:
@@ -94,13 +97,13 @@ class LoginScreen(Screen):
         self.context.game.set_screen('game')
 
     def save_credentials(self, email, password):
-        file = shelve.open('player.data')
+        file = shelve.open('data/player.data')
         file['email'] = email
         file['password'] = password
         file.close()
 
     def load_credentials(self):
-        file = shelve.open('player.data')
+        file = shelve.open('data/player.data')
         email = None
         password = None
         if 'email' in file:
@@ -110,7 +113,7 @@ class LoginScreen(Screen):
         return email, password
 
     def init_widgets(self):
-        style_regular = TextViewStyle(Assets.font_regular, Colors.black, Colors.white, Align.center)
+        style_regular = TextViewStyle(Assets.font_regular, Colors.black, None, Align.center)
         style_logo = TextViewStyle(Assets.font_logo, Colors.black, None, Align.center)
         style_edit_text = EditTextStyle(Assets.font_regular, Colors.black, Colors.grey, Colors.white, Align.center)
         size = Assets.font_regular.size("Mail.ru's")
@@ -198,32 +201,125 @@ class LoginScreen(Screen):
 
 
 class GameScreen(Screen):
+    """
+    0 - palette
+    1 - round clock
+    2 - cooldown clock
+    """
+
     def __init__(self, context):
         super().__init__(context)
+        self.db = self.context.firebase.database()
+        self.pixels_stream = self.db.child('pixels-test').stream(self.receive_pixel, self.get_token())
         self.canvas = pygame.Surface(
-            [Consts.game_field_width * Consts.pixel_size,
-             Consts.game_field_height * Consts.pixel_size]).convert_alpha()
-        self.canvas.fill((255, 255, 255))
-        self.camera = Rect(0, 0, Consts.game_field_width * Consts.pixel_size,
-                           Consts.game_field_height * Consts.pixel_size)
+            [Consts.game_field_width, Consts.game_field_height]).convert_alpha()
+        self.canvas.fill(Colors.messy_white)
+        self.camera = Rect(0, 0, Consts.game_field_width, Consts.game_field_height)
         self.is_lmb_held = False
+        self.is_waiting = False
         self.camera_x = 0
         self.camera_y = 0
         self.count = 0
         self.passed_time = 0
-        self.db = self.context.firebase.database()
-        self.pixels_stream = self.db.child('pixels-test').stream(self.receive_pixel, self.get_token())
+        self.next_draw = 0
+        self.end_of_round = int(self.db.child('service').child('time').get(self.get_token()).val())
         self.suggestion = None
         self.target = Target()
+        self.pixels_queue = []
+        self.send_thread = threading.Thread(target=self.send_pixel)
+        self.send_thread.start()
         self.load_game_field()
 
+    def conquer_pixel(self):
+        self.palette.enabled = False
+        self.widgets[2].enabled = True
+        self.next_draw = 0 * 1000
+        self.is_waiting = True
+        x = int(self.coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
+        y = int(self.coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
+        colors = Colors.game[self.palette.selected]
+        self.pixels_queue.append(((x, y), colors))
+
+    def send_pixel(self):
+        while 1:
+            if self.pixels_queue.__len__() != 0:
+                pixel = self.pixels_queue.pop(0)
+                dest = pixel[0]
+                colors = pixel[1]
+                self.db.child('pixels-test').child(str(dest[0] + dest[1] * Consts.game_field_width)).update(
+                    {
+                        "color": colors
+                    }, self.get_token())
+
+    def receive_pixel(self, pixel):
+        self.count += 1
+        if self.count > 1:
+            number = int(pixel['path'][1:])
+            x = number % Consts.game_field_width
+            y = int((number - x) / Consts.game_field_width)
+            self.canvas.set_at((x, y), pixel['data']['color'])
+
+    def load_game_field(self):
+        pixels = self.db.child('pixels-test').get(self.get_token()).val()
+        for j in range(0, Consts.game_field_height):
+            for i in range(0, Consts.game_field_width):
+                colors = pixels[i + Consts.game_field_width * j]['color']
+                self.canvas.set_at((i, j), colors)
+
+    def update_user_token(self, delta):
+        self.passed_time += delta
+        if self.passed_time > 55 * 60 * 1000:  # update token every 50 minutes
+            self.context.auth.refresh(self.context.user['refreshToken'])
+            self.passed_time = 0
+
+    def update_round_clock(self):
+        t = self.end_of_round - time.time() * 1000
+        seconds = int((t / 1000) % 60)
+        minutes = int((t / (1000 * 60)) % 60)
+        flag_1 = seconds < 10
+        flag_2 = minutes < 10
+        self.widgets[1].set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
+
+    def update_cooldown_clock(self):
+        t = self.next_draw
+        seconds = int((t / 1000) % 60)
+        minutes = int((t / (1000 * 60)) % 60)
+        flag_1 = seconds < 10
+        flag_2 = minutes < 10
+        self.widgets[2].set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
+
+    def get_token(self):
+        return self.context.user['idToken']
+
+    def update(self, delta):
+        self.update_user_token(delta)
+        self.update_round_clock()
+        if self.is_waiting:
+            self.update_cooldown_clock()
+            self.next_draw -= delta
+            if self.next_draw <= 0:
+                self.palette.enabled = True
+                self.widgets[2].enabled = False
+                self.is_waiting = False
+
+        super().update(delta)
+
     def init_widgets(self):
-        self.widgets.append(Palette(Colors.transparent_white))
+        self.widgets.append(Palette(Colors.transparent_black))
+        text_view_style = TextViewStyle(Assets.font_small, Colors.white, Colors.transparent_black)
+        self.widgets.append(
+            TextView('20:18', (Setts.screen_width / 2 - .05 * Setts.screen_width / 2, 0), text_view_style,
+                     (.05 * Setts.screen_width, .065 * Setts.screen_height)))
+        self.widgets.append(
+            TextView('20:24', (Setts.screen_width / 2 - .05 * Setts.screen_width / 2, 9 * Setts.screen_height / 10),
+                     text_view_style,
+                     (.05 * Setts.screen_width, .065 * Setts.screen_height)))
+        self.widgets[2].enabled = False
         self.palette = self.widgets[0]
 
     def draw_bg(self, screen):
         camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
-        camera_canvas.fill(Colors.red)
+        camera_canvas.fill(Colors.messy_white)
         camera_canvas.blit(self.canvas, (0, 0), Rect(self.camera_x, self.camera_y, self.camera.w, self.camera.h))
         camera_canvas = pygame.transform.scale(camera_canvas, (Setts.screen_width, Setts.screen_height))
         screen.blit(camera_canvas, (0, 0))
@@ -240,46 +336,6 @@ class GameScreen(Screen):
     def draw(self):
         super().draw()
         self.draw_suggestion()
-
-    def load_game_field(self):
-        pixels = self.db.child('pixels-test').get(self.get_token()).val()
-        for j in range(0, 20):
-            for i in range(0, 50):
-                colors = pixels[i + Consts.game_field_width * j]['color']
-                self.canvas.set_at((i, j), colors)
-
-    def get_token(self):
-        return self.context.user['idToken']
-
-    def receive_pixel(self, pixel):
-        self.count += 1
-        if self.count > 1:
-            number = int(pixel['path'][1:])
-            x = number % Consts.game_field_width
-            y = int((number - x) / Consts.game_field_height)
-            self.canvas.set_at((x, y), pixel['data']['color'])
-
-    def conquer_pixel(self):
-        x = int(self.coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
-        y = int(self.coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
-        colors = Colors.game[self.palette.selected]
-        self.send_pixel((x, y), colors)
-
-    def send_pixel(self, dest, colors):
-        self.db.child('pixels-test').child(str(dest[0] + dest[1] * Consts.game_field_width)).update(
-            {
-                "color": colors
-            }, self.get_token())
-
-    def update_user_token(self, delta):
-        self.passed_time += delta
-        if self.passed_time > 55 * 60 * 1000:  # update token every 50 minutes
-            self.context.auth.refresh(self.context.user['refreshToken'])
-            self.passed_time = 0
-
-    def update(self, delta):
-        self.update_user_token(delta)
-        super().update(delta)
 
     def inflate_camera(self, offset_x, offset_y):
         self.camera.inflate_ip(offset_x, offset_y)
@@ -315,9 +371,10 @@ class GameScreen(Screen):
             pos = pygame.mouse.get_pos()
             flag = False
             for w in self.widgets:
-                flag = w.hit(pos[0], pos[1]) or False
+                flag = w.hit(pos[0], pos[1])
+                if flag[0]:
+                    break
             if not flag[0] and self.palette.selected != -1:
-                self.target.prev_dest = None
                 self.conquer_pixel()
             self.palette.selected = flag[2] if flag[0] and flag[1] == 'palette' else -1
         if self.is_lmb_held:
@@ -327,8 +384,8 @@ class GameScreen(Screen):
     def check_click(self, e):
         pos = pygame.mouse.get_pos()
         self.is_clicked = e.type == pygame.MOUSEBUTTONUP and self.last_mouse_event.type == pygame.MOUSEBUTTONDOWN and \
-                          e.button == 1 and math.fabs(self.last_mouse_pos[0] - pos[0]) <= 1 and \
-                          math.fabs(self.last_mouse_pos[1] - pos[1]) <= 1
+                          e.button == 1 and math.fabs(self.last_mouse_pos[0] - pos[0]) <= Consts.click_deadzone and \
+                          math.fabs(self.last_mouse_pos[1] - pos[1]) <= Consts.click_deadzone
         self.last_mouse_pos = pos
         self.last_mouse_event = e
 
@@ -337,13 +394,24 @@ class GameScreen(Screen):
             pos = pygame.mouse.get_pos()
             x = int(pos[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
             y = int(pos[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
-            if 0 <= x <= Consts.game_field_width and 0 <= y <= Consts.game_field_height:
-                self.target.commit((x, y), Colors.game[self.palette.selected], self.canvas.get_at((x, y)))
+            if 0 <= x < Consts.game_field_width and 0 <= y < Consts.game_field_height:
+                self.target.commit((x, y), Colors.game[self.palette.selected],
+                                   self.canvas.get_at((x, y)))
+        else:
+            self.target.dest = (-1, -1)
 
     def move_field(self):
         curr_coords = pygame.mouse.get_pos()
         self.camera_x += (self.coords[0] - curr_coords[0]) * (self.camera.w / Setts.screen_width)
         self.camera_y += (self.coords[1] - curr_coords[1]) * (self.camera.h / Setts.screen_height)
+        if self.camera_x < -Consts.game_field_width / 2:
+            self.camera_x = -Consts.game_field_width / 2
+        if self.camera_y < -Consts.game_field_height / 2:
+            self.camera_y = -Consts.game_field_height / 2
+        if self.camera_x > Consts.game_field_width / 2:
+            self.camera_x = Consts.game_field_width / 2
+        if self.camera_y > Consts.game_field_height / 2:
+            self.camera_y = Consts.game_field_height / 2
         self.camera.__setattr__('x', self.camera_x)
         self.camera.__setattr__('y', self.camera_y)
         self.coords = curr_coords
@@ -352,14 +420,15 @@ class GameScreen(Screen):
 class Target:
     def __init__(self):
         self.dest = (-1, -1)
-        self.target_color = None
+        self.target_color = (0, 0, 0, 255)
         self.curr_color = None
         self.prev_dest = None
         self.prev_color = None
         self.different = False
 
     def commit(self, dest, target_color, curr_color):
-        if self.dest[0] != dest[0] or self.dest[1] != dest[1]:
+        if (self.dest[0] != dest[0] or self.dest[1] != dest[1]) and \
+                                0 <= dest[0] <= Consts.game_field_width and 0 <= dest[1] <= Consts.game_field_height:
             self.prev_dest = self.dest
             self.prev_color = self.curr_color
             self.dest = dest

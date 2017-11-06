@@ -2,10 +2,10 @@ import pygame
 from pygame.rect import Rect
 from pygame.surface import Surface
 
-from colors import Colors
-from constants import Constants as Consts
-from settings import Settings as Setts
-from styles import Align, ButtonStyle
+from assets.colors import Colors
+from ui.styles import Align, ButtonStyle
+from util.constants import Constants as Consts
+from util.settings import Settings as Setts
 
 
 class Widget:
@@ -51,10 +51,16 @@ class TextView(Widget):
         self.update_canvas()
 
     def draw(self, canvas):
-        canvas.blit(self.canvas, self.dest)
+        if self.enabled:
+            canvas.blit(self.canvas, self.dest)
 
     def update_canvas(self):
-        self.canvas = self.style.font.render(self.text, True, self.style.text_color, self.style.bg_color)
+        if self.style.bg_color is not None:
+            pygame.draw.rect(self.canvas, self.style.bg_color, Rect(0, 0, self.width, self.height))
+            size=self.style.font.size(self.text)
+            self.canvas.blit(self.style.font.render(self.text, True, self.style.text_color, None), (self.width/2-size[0]/2, self.height/2-size[1]/2))
+        else:
+            self.canvas = self.style.font.render(self.text, True, self.style.text_color, None)
 
     def update_size(self):
         size = self.style.font.size(self.text)
@@ -221,7 +227,8 @@ class Palette(Widget):
         self.update_canvas()
 
     def draw(self, canvas):
-        canvas.blit(self.canvas, (self.x, self.y))
+        if self.enabled:
+            canvas.blit(self.canvas, (self.x, self.y))
 
     def hit(self, x, y):
         if self.enabled:
@@ -244,7 +251,7 @@ class Palette(Widget):
 class LoadingView(Widget):
     def __init__(self, dest):
         super().__init__((Consts.frame_width, 8 * Consts.frame_width), dest)
-        self.image = pygame.image.load('load.jpg')
+        self.image = pygame.image.load('assets/load.jpg')
         self.i = 0
         self.elapsed = 0
         self.limit = 125

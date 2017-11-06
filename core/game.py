@@ -1,13 +1,12 @@
-import asyncio
 from enum import Enum
+
 import pygame
 import pyrebase
-import sys
 
-from assets import Assets
-from constants import Constants as Consts
-from screens import LoginScreen, Context, GameScreen
-from settings import Settings as Setts
+from assets.assets import Assets
+from core.screens import LoginScreen, Context, GameScreen
+from util.constants import Constants as Consts
+from util.settings import Settings as Setts
 
 
 class Screens(Enum):
@@ -20,14 +19,15 @@ class Game:
         pygame.init()
         pygame.key.set_repeat(400, 50)
         Assets()
-        Setts()
         self.init_pyrebase()
         screen = pygame.display.set_mode((Setts.screen_width, Setts.screen_height))
+        info = pygame.display.Info()
+        Consts.click_deadzone = int(info.current_w / 100)
         pygame.display.set_caption(Setts.display_caption)
-        screen.fill(Setts.bg_color)
+        from assets.colors import Colors
+        screen.fill(Colors.messy_white)
         self.clock = pygame.time.Clock()
         self.queries = []
-        loop=asyncio.get_event_loop()
         self.context = Context(self, screen, self.firebase, self.auth)
         self.set_screen('login')
 
