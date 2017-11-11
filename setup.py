@@ -8,5 +8,5 @@ setup(
     license='',
     author='kekonyanus',
     author_email='',
-    description='Defend the land!'
+    description='Defend the land!', requires=['pygame', 'pyrebase']
 )

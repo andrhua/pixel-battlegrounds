@@ -22,7 +22,7 @@ class Game:
         self.init_pyrebase()
         screen = pygame.display.set_mode((Setts.screen_width, Setts.screen_height))
         info = pygame.display.Info()
-        Consts.click_deadzone = int(info.current_w / 100)
+        Consts.click_deadzone = int(info.current_w / 200)
         pygame.display.set_caption(Setts.display_caption)
         from assets.colors import Colors
         screen.fill(Colors.messy_white)
@@ -30,7 +30,6 @@ class Game:
         self.queries = []
         self.context = Context(self, screen, self.firebase, self.auth)
         self.set_screen('login')
-
 
     def init_pyrebase(self):
         config = {

@@ -58,7 +58,8 @@ class TextView(Widget):
         if self.style.bg_color is not None:
             pygame.draw.rect(self.canvas, self.style.bg_color, Rect(0, 0, self.width, self.height))
             size=self.style.font.size(self.text)
-            self.canvas.blit(self.style.font.render(self.text, True, self.style.text_color, None), (self.width/2-size[0]/2, self.height/2-size[1]/2))
+            self.canvas.blit(self.style.font.render(self.text, True, self.style.text_color, None),
+                             (self.width/2-size[0]/2, self.height/2-size[1]/2))
         else:
             self.canvas = self.style.font.render(self.text, True, self.style.text_color, None)
 
@@ -106,7 +107,7 @@ class EditText(TextView):
         if len(self.editable_text) > 0:
             self.canvas = self.style.font.render(
                 self.editable_text if not self.is_protected else self.get_hidden_str(),
-                True, self.style.text_color, self.style.bg_color if self.is_editable else Colors.grey)
+                True, self.style.text_color if self.is_editable else Colors.transparent_grey, self.style.bg_color)
             self.update_dest(self.editable_text if not self.is_protected else self.get_hidden_str())
         else:
             self.canvas = self.style.font.render(self.text, True, self.style.hint_color, self.style.bg_color)
@@ -173,14 +174,25 @@ class EditText(TextView):
 class Button(Widget):
     def __init__(self, dimens, dest, style):
         super().__init__(dimens, dest)
+        self.pressed_dimens = (int(self.width*.8), int(self.height*.8))
+        self.pressed_dest = (self.x+(self.width/2-self.pressed_dimens[0]/2),
+                             self.y+(self.height/2-self.pressed_dimens[1]/2))
         self.style = style
+        self.pressed = False
+        self.pressed_rect = Rect(0, 0, self.pressed_dimens[0], self.pressed_dimens[1])
         self.update_canvas()
 
     def update_canvas(self):
         pygame.draw.rect(self.canvas, self.style.bg_color, Rect(0, 0, self.width, self.height))
 
     def draw(self, canvas):
-        canvas.blit(self.canvas, (self.x, self.y))
+        if self.pressed:
+            canvas.blit(self.canvas, self.pressed_dest, self.pressed_rect)
+        else:
+            canvas.blit(self.canvas, (self.x, self.y))
+
+    def on_hit(self, *args):
+        self.pressed = not self.pressed
 
 
 class TextButton(Button):
@@ -233,16 +245,22 @@ class Palette(Widget):
     def hit(self, x, y):
         if self.enabled:
             i = 0
-            flag = False
+            k = 21
+            k_flag = False
             for button in self.buttons:
-                flag = button.hit(x, y - self.y)[0]
-                if flag:
-                    break
+                if button.hit(x, y - self.y)[0] and button.pressed:
+                    k = i
+                    k_flag = True
+                else:
+                    button.pressed = False
                 i += 1
-            return flag, 'palette', i
+            self.update_canvas()
+            return k_flag, 'palette', k
         return False, 'palette', -1
 
     def update_canvas(self, *args):
+        self.canvas.fill((0, 0, 0))
+        self.canvas.convert_alpha()
         pygame.draw.rect(self.canvas, self.bg_color, Rect(0, 0, self.width, self.height))
         for button in self.buttons:
             button.draw(self.canvas)

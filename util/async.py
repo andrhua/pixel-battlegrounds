@@ -4,7 +4,7 @@ import threading
 class AsyncTask:
     def __init__(self, runnable, *args):
         self.runnable = runnable
-        self.thread = threading.Thread(target=runnable, args=args)
+        self.thread = threading.Thread(target=runnable, args=args, daemon=True)
 
     def execute(self):
         self.thread.start()

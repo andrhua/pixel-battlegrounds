@@ -1,4 +1,3 @@
-import asyncio
 import math
 import shelve
 import sys
@@ -24,15 +23,19 @@ class Context:
         self.firebase = firebase
         self.auth = auth
         self.user = None
-        self.loop = asyncio.get_event_loop()
+        self.data = shelve.open('data/data')
 
 
 class Screen:
+    LAST_EXIT = 'last_exit'
+    TOKEN = 'idToken'
+
     def __init__(self, context):
         self.context = context
         self.widgets = []
         self.init_widgets()
         self.is_clicked = False
+        self.down_coords = (0, 0)
         self.last_mouse_event = -1
         self.last_mouse_pos = (-1, -1)
 
@@ -40,18 +43,13 @@ class Screen:
         pass
 
     def process_events(self, e):
-        if e.type == pygame.QUIT:
-            sys.exit()
-        elif (e.type == pygame.MOUSEBUTTONDOWN or e.type == pygame.MOUSEBUTTONUP) and e.button == 1:
-            pos = pygame.mouse.get_pos()
-            self.is_clicked = e.type == pygame.MOUSEBUTTONUP and self.last_mouse_event == pygame.MOUSEBUTTONDOWN and \
-                              self.last_mouse_pos[0] == pos[0] and self.last_mouse_pos[1] == pos[1]
-            print(self.is_clicked)
-        if self.is_clicked:
-            for w in self.widgets:
-                if w.hit(pos[0], pos[1]):
-                    break
-        self.last_mouse_event = e
+        pass
+
+    def check_click(self, e):
+        pos = pygame.mouse.get_pos()
+        self.is_clicked = e.type == pygame.MOUSEBUTTONUP and \
+                          e.button == 1 and math.fabs(self.down_coords[0] - pos[0]) <= Consts.click_deadzone and \
+                          math.fabs(self.down_coords[1] - pos[1]) <= Consts.click_deadzone
 
     def update(self, delta):
         for w in self.widgets:
@@ -66,51 +64,58 @@ class Screen:
     def draw_bg(self, screen):
         self.context.screen.fill(Colors.white)
 
+    def save(self, key, value):
+        self.context.data[key] = value
+
+    def load(self, key):
+        return self.context.data[key] if key in self.context.data else None
+
+    def get_token(self):
+        return self.context.user[self.TOKEN]
+
+    def exit(self):
+        self.context.data.close()
+        pygame.display.quit()
+        pygame.quit()
+        sys.exit(1)
+
 
 class LoginScreen(Screen):
+    EMAIL = 'email'
+    PASS = 'pass'
+
     def __init__(self, context):
         super().__init__(context)
         self.edit_text_flag = False
         self.selected_edit_text = -1
-        self.creds = self.load_credentials()
         self.login_task = None
-        if self.creds[0] is not None:
-            self.login_task = AsyncTask(self.login, self.creds)
+        email = self.load(self.EMAIL)
+        if email is not None:
+            self.context.last_exit = self.load(self.LAST_EXIT)
+            self.login_task = AsyncTask(self.login, email, self.load(self.PASS))
             self.login_task.execute()
 
-    def login(self, credentials):
-        self.widgets[4].enabled = True
+    def login(self, email, password):
         self.widgets[2].is_editable = False
         self.widgets[3].is_editable = False
-        email = credentials[0]
-        password = credentials[1]
+        self.widgets[4].enabled = True
         try:
             self.context.user = self.context.auth.sign_in_with_email_and_password(email, password)
         except:
             self.context.user = self.context.auth.create_user_with_email_and_password(email, password)
-            self.widgets[4].enabled = False
-            self.widgets[2].is_editable = True
-            self.widgets[3].is_editable = True
-            return
-        self.save_credentials(email, password)
-        # self.initttt()
+        self.save(self.EMAIL, email)
+        self.save(self.PASS, password)
+        #self.initttt()
         self.context.game.set_screen('game')
 
-    def save_credentials(self, email, password):
-        file = shelve.open('data/player.data')
-        file['email'] = email
-        file['password'] = password
-        file.close()
-
-    def load_credentials(self):
-        file = shelve.open('data/player.data')
-        email = None
-        password = None
-        if 'email' in file:
-            email = file['email']
-            password = file['password']
-        file.close()
-        return email, password
+    def initttt(self):
+        def zzza():
+            return {'color': [255, 255, 255]}
+        strs = {}
+        for i in range(0, 800000):
+            print(i)
+            strs[str(i)] = zzza()
+        self.context.firebase.database().child('pixels').set(strs, self.get_token())
 
     def init_widgets(self):
         style_regular = TextViewStyle(Assets.font_regular, Colors.black, None, Align.center)
@@ -158,20 +163,20 @@ class LoginScreen(Screen):
                     if self.widgets[3].get_text() == '':
                         self.switch_edit_texts()
                     else:
-                        self.creds = (self.widgets[2].get_text(), self.widgets[3].get_text())
-                        self.login_task = AsyncTask(self.login, self.creds)
+                        self.widgets[4].enabled = True
+                        self.widgets[2].is_editable = False
+                        self.widgets[3].is_editable = False
+                        self.login_task = AsyncTask(self.login, self.widgets[2].get_text(), self.widgets[3].get_text())
                         self.login_task.execute()
                 else:
                     self.widgets[self.selected_edit_text].append_text(e.unicode)
         if e.type == pygame.QUIT:
-            sys.exit()
-        else:
-            pos = pygame.mouse.get_pos()
-            self.is_clicked = e.type == pygame.MOUSEBUTTONUP and self.last_mouse_event.type == pygame.MOUSEBUTTONDOWN and \
-                              e.button == 1 and self.last_mouse_pos[0] == pos[0] and self.last_mouse_pos[1] == pos[1]
-            self.last_mouse_pos = pos
-            self.last_mouse_event = e
+            self.exit()
+        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+            self.coords = pygame.mouse.get_pos()
+        self.check_click(e)
         if self.is_clicked:
+            pos = pygame.mouse.get_pos()
             i = 0
             for w in self.widgets:
                 res = w.hit(pos[0], pos[1])
@@ -191,26 +196,17 @@ class LoginScreen(Screen):
         self.edit_text_flag = False
         self.selected_edit_text = -1
 
-    def initttt(self):
-        pixels = self.context.firebase.database()
-        for j in range(0, 1000):
-            pixels.child('pixels-test').child(str(j)).set(
-                {
-                    'color': [255, 255, 255]
-                }, self.context.user['idToken'])
-
 
 class GameScreen(Screen):
-    """
-    0 - palette
-    1 - round clock
-    2 - cooldown clock
-    """
+    PIXELS = 'pixels-test'
+    SERVICE = 'service'
+    COLOR = 'color'
+    NEXT_DRAW = 'next_draw'
 
     def __init__(self, context):
         super().__init__(context)
         self.db = self.context.firebase.database()
-        self.pixels_stream = self.db.child('pixels-test').stream(self.receive_pixel, self.get_token())
+        self.pixels_stream = self.db.child(self.PIXELS).stream(self.receive_pixel, self.get_token())
         self.canvas = pygame.Surface(
             [Consts.game_field_width, Consts.game_field_height]).convert_alpha()
         self.canvas.fill(Colors.messy_white)
@@ -221,54 +217,43 @@ class GameScreen(Screen):
         self.camera_y = 0
         self.count = 0
         self.passed_time = 0
-        self.next_draw = 0
-        self.end_of_round = int(self.db.child('service').child('time').get(self.get_token()).val())
+        self.down_coords = (-1, -1)
+        self.prev_coords = (-1, -1)
+        nd = self.load(self.NEXT_DRAW)
+
+        if nd is not None:
+            self.next_draw = max(self.load(self.NEXT_DRAW) - (time.time() - self.load(self.LAST_EXIT)), 0)
+        else:
+            self.next_draw = 0
+        if self.next_draw > 0:
+            self.set_waiting_mode(0)
+        self.end_of_round = int(self.db.child(self.SERVICE).child('time').get(self.get_token()).val())
         self.suggestion = None
         self.target = Target()
         self.pixels_queue = []
-        self.send_thread = threading.Thread(target=self.send_pixel)
+        self.send_thread = threading.Thread(target=self.send_pixel, daemon=True)
         self.send_thread.start()
         self.load_game_field()
 
-    def conquer_pixel(self):
-        self.palette.enabled = False
-        self.widgets[2].enabled = True
-        self.next_draw = 0 * 1000
-        self.is_waiting = True
-        x = int(self.coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
-        y = int(self.coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
-        colors = Colors.game[self.palette.selected]
-        self.pixels_queue.append(((x, y), colors))
-
-    def send_pixel(self):
-        while 1:
-            if self.pixels_queue.__len__() != 0:
-                pixel = self.pixels_queue.pop(0)
-                dest = pixel[0]
-                colors = pixel[1]
-                self.db.child('pixels-test').child(str(dest[0] + dest[1] * Consts.game_field_width)).update(
-                    {
-                        "color": colors
-                    }, self.get_token())
-
-    def receive_pixel(self, pixel):
-        self.count += 1
-        if self.count > 1:
-            number = int(pixel['path'][1:])
-            x = number % Consts.game_field_width
-            y = int((number - x) / Consts.game_field_width)
-            self.canvas.set_at((x, y), pixel['data']['color'])
-
-    def load_game_field(self):
-        pixels = self.db.child('pixels-test').get(self.get_token()).val()
-        for j in range(0, Consts.game_field_height):
-            for i in range(0, Consts.game_field_width):
-                colors = pixels[i + Consts.game_field_width * j]['color']
-                self.canvas.set_at((i, j), colors)
+    def init_widgets(self):
+        self.widgets.append(Palette(Colors.transparent_black))
+        text_view_style = TextViewStyle(Assets.font_small, Colors.white, Colors.transparent_black)
+        self.widgets.append(
+            TextView('20:18', (Setts.screen_width / 2, 0), text_view_style,
+                     (.05 * Setts.screen_width, .065 * Setts.screen_height)))
+        self.widgets.append(
+            TextView('20:24', (Setts.screen_width / 2, 9 * Setts.screen_height / 10),
+                     text_view_style,
+                     (.05 * Setts.screen_width, .065 * Setts.screen_height)))
+        self.widgets.append(
+            TextView('(22, 48)', (0, 0), text_view_style)
+        )
+        self.widgets[2].enabled = False
+        self.palette = self.widgets[0]
 
     def update_user_token(self, delta):
         self.passed_time += delta
-        if self.passed_time > 55 * 60 * 1000:  # update token every 50 minutes
+        if self.passed_time > 50 * 60 * 1000:  # update token every 50 minutes
             self.context.auth.refresh(self.context.user['refreshToken'])
             self.passed_time = 0
 
@@ -288,11 +273,17 @@ class GameScreen(Screen):
         flag_2 = minutes < 10
         self.widgets[2].set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
 
-    def get_token(self):
-        return self.context.user['idToken']
+    def update_coords(self):
+        pos = pygame.mouse.get_pos()
+        x = int(pos[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
+        y = int(pos[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
+        self.widgets[3].set_text(str('(')+str(x)+', '+str(y)+')')
 
     def update(self, delta):
+        if (delta > 1000  or delta < 0) and self.next_draw > 0:
+            self.next_draw = 60 * 60 * 1000
         self.update_user_token(delta)
+        self.update_coords()
         self.update_round_clock()
         if self.is_waiting:
             self.update_cooldown_clock()
@@ -303,19 +294,6 @@ class GameScreen(Screen):
                 self.is_waiting = False
 
         super().update(delta)
-
-    def init_widgets(self):
-        self.widgets.append(Palette(Colors.transparent_black))
-        text_view_style = TextViewStyle(Assets.font_small, Colors.white, Colors.transparent_black)
-        self.widgets.append(
-            TextView('20:18', (Setts.screen_width / 2 - .05 * Setts.screen_width / 2, 0), text_view_style,
-                     (.05 * Setts.screen_width, .065 * Setts.screen_height)))
-        self.widgets.append(
-            TextView('20:24', (Setts.screen_width / 2 - .05 * Setts.screen_width / 2, 9 * Setts.screen_height / 10),
-                     text_view_style,
-                     (.05 * Setts.screen_width, .065 * Setts.screen_height)))
-        self.widgets[2].enabled = False
-        self.palette = self.widgets[0]
 
     def draw_bg(self, screen):
         camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
@@ -330,25 +308,22 @@ class GameScreen(Screen):
                 self.target.different = False
                 pygame.draw.rect(self.canvas, self.target.prev_color,
                                  Rect(self.target.prev_dest[0], self.target.prev_dest[1], 1, 1))
-            pygame.draw.rect(self.canvas, self.target.target_color,
+            pygame.draw.rect(self.canvas,
+                             self.target.target_color if not self.target.gone else self.target.curr_color,
                              Rect(self.target.dest[0], self.target.dest[1], 1, 1))
 
     def draw(self):
         super().draw()
         self.draw_suggestion()
 
-    def inflate_camera(self, offset_x, offset_y):
-        self.camera.inflate_ip(offset_x, offset_y)
-        self.camera_x -= offset_x / 2
-        self.camera_y -= offset_y / 2
-
     def process_events(self, e):
         if e.type == pygame.QUIT:
-            sys.exit()
-        elif e.type == pygame.MOUSEBUTTONDOWN:
+            self.exit()
+        if e.type == pygame.MOUSEBUTTONDOWN:
             if e.button == 1:
                 self.is_lmb_held = True
-                self.coords = pygame.mouse.get_pos()
+                self.down_coords = pygame.mouse.get_pos()
+                self.prev_coords = self.down_coords
             if e.button == 4:  # zoom in
                 offset_x = -self.camera.w * Consts.scroll_amount
                 offset_y = -self.camera.h * Consts.scroll_amount
@@ -356,16 +331,15 @@ class GameScreen(Screen):
                     offset_x = 0
                     offset_y = 0
                 self.inflate_camera(offset_x, offset_y)
-            elif e.button == 5:  # zoom out
+            if e.button == 5:  # zoom out
                 offset_x = self.camera.w * Consts.scroll_amount
                 offset_y = self.camera.h * Consts.scroll_amount
                 if self.camera.w + offset_x > Consts.downscale_limit:
                     offset_x = 0
                     offset_y = 0
                 self.inflate_camera(offset_x, offset_y)
-        elif e.type == pygame.MOUSEBUTTONUP:
-            if e.button == 1:
-                self.is_lmb_held = False
+        elif e.type == pygame.MOUSEBUTTONUP and e.button == 1:
+            self.is_lmb_held = False
         self.check_click(e)
         if self.is_clicked:
             pos = pygame.mouse.get_pos()
@@ -381,57 +355,103 @@ class GameScreen(Screen):
             self.move_field()
         self.check_fill()
 
-    def check_click(self, e):
-        pos = pygame.mouse.get_pos()
-        self.is_clicked = e.type == pygame.MOUSEBUTTONUP and self.last_mouse_event.type == pygame.MOUSEBUTTONDOWN and \
-                          e.button == 1 and math.fabs(self.last_mouse_pos[0] - pos[0]) <= Consts.click_deadzone and \
-                          math.fabs(self.last_mouse_pos[1] - pos[1]) <= Consts.click_deadzone
-        self.last_mouse_pos = pos
-        self.last_mouse_event = e
+    def inflate_camera(self, offset_x, offset_y):
+        self.camera.inflate_ip(offset_x, offset_y)
+        self.camera_x -= offset_x / 2
+        self.camera_y -= offset_y / 2
+        self.camera.__setattr__('x', self.camera_x)
+        self.camera.__setattr__('y', self.camera_y)
 
     def check_fill(self):
+        pos = pygame.mouse.get_pos()
         if self.palette.selected != -1:
-            pos = pygame.mouse.get_pos()
-            x = int(pos[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
-            y = int(pos[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
-            if 0 <= x < Consts.game_field_width and 0 <= y < Consts.game_field_height:
-                self.target.commit((x, y), Colors.game[self.palette.selected],
-                                   self.canvas.get_at((x, y)))
+            if pos[1] <= 9 * Setts.screen_height / 10:
+                self.target.gone = False
+                x = int(pos[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
+                y = int(pos[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
+                if 0 <= x < Consts.game_field_width and 0 <= y < Consts.game_field_height:
+                    self.target.commit((x, y), Colors.game[self.palette.selected],
+                                       self.canvas.get_at((x, y)))
+                else:
+                    self.target.gone = True
+            else:
+                self.target.gone = True
         else:
             self.target.dest = (-1, -1)
 
     def move_field(self):
-        curr_coords = pygame.mouse.get_pos()
-        self.camera_x += (self.coords[0] - curr_coords[0]) * (self.camera.w / Setts.screen_width)
-        self.camera_y += (self.coords[1] - curr_coords[1]) * (self.camera.h / Setts.screen_height)
-        if self.camera_x < -Consts.game_field_width / 2:
-            self.camera_x = -Consts.game_field_width / 2
-        if self.camera_y < -Consts.game_field_height / 2:
-            self.camera_y = -Consts.game_field_height / 2
-        if self.camera_x > Consts.game_field_width / 2:
-            self.camera_x = Consts.game_field_width / 2
-        if self.camera_y > Consts.game_field_height / 2:
-            self.camera_y = Consts.game_field_height / 2
+        pos = pygame.mouse.get_pos()
+        self.camera_x += (self.prev_coords[0] - pos[0]) * (self.camera.w / Setts.screen_width)
+        self.camera_y += (self.prev_coords[1] - pos[1]) * (self.camera.h / Setts.screen_height)
         self.camera.__setattr__('x', self.camera_x)
         self.camera.__setattr__('y', self.camera_y)
-        self.coords = curr_coords
+        self.prev_coords = pos
+
+    def set_waiting_mode(self, code):
+        if code == 1:
+            self.next_draw = 5*1000#0 * 90 * 1000
+        self.palette.enabled = False
+        self.widgets[2].enabled = True
+        self.is_waiting = True
+
+    def conquer_pixel(self):
+        if self.prev_coords[1] <= 9 * Setts.screen_height / 10:
+            x = int(self.prev_coords[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
+            y = int(self.prev_coords[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
+            if 0 <= x < Consts.game_field_width and 0 <= y < Consts.game_field_height:
+                self.set_waiting_mode(1)
+                colors = Colors.game[self.palette.selected]
+                self.pixels_queue.append(((x, y), colors))
+
+    def send_pixel(self):
+        while 1:
+            if self.pixels_queue.__len__() != 0:
+                pixel = self.pixels_queue.pop(0)
+                dest = pixel[0]
+                colors = pixel[1]
+                self.db.child(self.PIXELS).child(str(dest[0] + dest[1] * Consts.game_field_width)).update(
+                    {
+                        self.COLOR: colors
+                    }, self.get_token())
+
+    def receive_pixel(self, pixel):
+        self.count += 1
+        if self.count > 1:
+            number = int(pixel['path'][1:])
+            x = number % Consts.game_field_width
+            y = int((number - x) / Consts.game_field_width)
+            self.canvas.set_at((x, y), pixel['data'][self.COLOR])
+
+    def load_game_field(self):
+        pixels = self.db.child(self.PIXELS).get(self.get_token()).val()
+        for j in range(0, Consts.game_field_height):
+            for i in range(0, Consts.game_field_width):
+                self.canvas.set_at((i, j), pixels[i + Consts.game_field_width * j][self.COLOR])
+
+    def exit(self):
+        self.save(self.NEXT_DRAW, self.next_draw)
+        self.save(self.LAST_EXIT, time.time())
+        super().exit()
 
 
 class Target:
     def __init__(self):
         self.dest = (-1, -1)
         self.target_color = (0, 0, 0, 255)
-        self.curr_color = None
+        self.curr_color = (0, 0, 0)
         self.prev_dest = None
         self.prev_color = None
         self.different = False
+        self.gone = False
 
     def commit(self, dest, target_color, curr_color):
-        if (self.dest[0] != dest[0] or self.dest[1] != dest[1]) and \
-                                0 <= dest[0] <= Consts.game_field_width and 0 <= dest[1] <= Consts.game_field_height:
+        if self.dest[0] != dest[0] or self.dest[1] != dest[1]:
             self.prev_dest = self.dest
             self.prev_color = self.curr_color
             self.dest = dest
             self.target_color = target_color
             self.curr_color = curr_color
             self.different = True
+
+    def __str__(self):
+        return self.dest, self.target_color, self.curr_color
