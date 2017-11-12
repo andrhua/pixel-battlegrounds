@@ -70,6 +70,7 @@ class TextView(Widget):
 
     def set_text(self, text):
         self.text = text
+        self.update_dest(text)
         self.update_canvas()
 
     def update_dest(self, text):
@@ -120,6 +121,14 @@ class EditText(TextView):
         pygame.draw.line(self.canvas, Colors.black, (0, self.height - 3 * Consts.line_width),
                          (self.canvas.get_width(), self.height - 3 * Consts.line_width),
                          Consts.line_width)
+
+    def set_text(self, text):
+        self.editable_text = text
+        self.update_canvas()
+
+    def set_empty(self):
+        self.set_text('')
+        self.index = 0
 
     def move_cursor(self, amount):
         self.index += amount

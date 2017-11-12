@@ -6,6 +6,7 @@ import time
 
 import pygame
 from pygame.rect import Rect
+from requests import HTTPError
 
 from assets.assets import Assets
 from assets.colors import Colors
@@ -83,6 +84,11 @@ class Screen:
 class LoginScreen(Screen):
     EMAIL = 'email'
     PASS = 'pass'
+    VERIFICATION_SENT = "Verify your email via letter we've just sent and sign in."
+    WRONG_PASS = "Incorrect password."
+    WEAK_PASS = "Password must contain a minimum of 6 characters."
+    WRONG_EMAIL = "Incorrect email."
+    NOT_VERIFIED_EMAIL = "Please first verify your email. Check spam box if necessary."
 
     def __init__(self, context):
         super().__init__(context)
@@ -92,21 +98,51 @@ class LoginScreen(Screen):
         email = self.load(self.EMAIL)
         if email is not None:
             self.context.last_exit = self.load(self.LAST_EXIT)
-            self.login_task = AsyncTask(self.login, email, self.load(self.PASS))
-            self.login_task.execute()
+            #self.login_task = AsyncTask(self.login, email, self.load(self.PASS))
+            #self.login_task.execute()
 
     def login(self, email, password):
+        def handle_exception(e):
+            print(e)
+            if 'EMAIL_NOT_FOUND' in e:
+                try:
+                    self.context.user = self.context.auth.create_user_with_email_and_password(email, password)
+                except HTTPError:
+                    self.widgets[5].set_text(self.WEAK_PASS)
+                else:
+                    self.context.auth.send_email_verification(self.get_token())
+                    self.widgets[5].set_text(self.VERIFICATION_SENT)
+                    self.save(self.EMAIL, email)
+                    self.save(self.PASS, password)
+            if 'INVALID_PASSWORD' in e:
+                self.widgets[5].set_text(self.WRONG_PASS)
+            if 'INVALID_EMAIL' in e:
+                self.widgets[5].set_text(self.WRONG_EMAIL)
+            if 'EMAIL_NOT_VERIFIED' in e:
+                self.widgets[5].set_text(self.NOT_VERIFIED_EMAIL)
+            self.widgets[2].is_editable = True
+            self.widgets[3].is_editable = True
+            self.widgets[3].set_empty()
+            self.widgets[4].enabled = False
+            self.widgets[5].enabled = True
+
+        def check_verification():
+            info = self.context.auth.get_account_info(self.get_token())
+            if info['users'][0]['emailVerified']:
+                #self.initttt()
+                self.context.game.set_screen('game')
+            else:
+                handle_exception('EMAIL_NOT_VERIFIED')
+
         self.widgets[2].is_editable = False
         self.widgets[3].is_editable = False
         self.widgets[4].enabled = True
         try:
             self.context.user = self.context.auth.sign_in_with_email_and_password(email, password)
-        except:
-            self.context.user = self.context.auth.create_user_with_email_and_password(email, password)
-        self.save(self.EMAIL, email)
-        self.save(self.PASS, password)
-        #self.initttt()
-        self.context.game.set_screen('game')
+        except HTTPError as e:
+            handle_exception(e.strerror)
+        else:
+            check_verification()
 
     def initttt(self):
         def zzza():
@@ -120,6 +156,7 @@ class LoginScreen(Screen):
     def init_widgets(self):
         style_regular = TextViewStyle(Assets.font_regular, Colors.black, None, Align.center)
         style_logo = TextViewStyle(Assets.font_logo, Colors.black, None, Align.center)
+        style_status = TextViewStyle(Assets.font_small, Colors.grey, None, Align.center)
         style_edit_text = EditTextStyle(Assets.font_regular, Colors.black, Colors.grey, Colors.white, Align.center)
         size = Assets.font_regular.size("Mail.ru's")
         self.widgets.append(TextView("Mail.ru's", (
@@ -134,11 +171,11 @@ class LoginScreen(Screen):
         size = Assets.font_regular.size("password")
         self.widgets.append(EditText("password", (Setts.screen_width / 2 - size[0] / 2, .6 * Setts.screen_height),
                                      style_edit_text, True))
-        """size = Assets.font_regular.size("Login")
-        self.widgets.append(
-            TextButton("Login", (Setts.screen_width / 2 - (size[0] + 10) / 2, .73 * Setts.screen_height),
-                       style_button))"""
         self.widgets.append(LoadingView((Setts.screen_width / 2 - Consts.frame_width / 2, .73 * Setts.screen_height)))
+        self.widgets.append(TextView('',
+                            (Setts.screen_width/2, 9*Setts.screen_height/10),
+                            style_status))
+        self.widgets[-1].enabled = False
 
     def switch_edit_texts(self):
         if self.selected_edit_text != -1:
@@ -169,11 +206,12 @@ class LoginScreen(Screen):
                         self.login_task = AsyncTask(self.login, self.widgets[2].get_text(), self.widgets[3].get_text())
                         self.login_task.execute()
                 else:
+                    self.widgets[5].enabled = False
                     self.widgets[self.selected_edit_text].append_text(e.unicode)
         if e.type == pygame.QUIT:
             self.exit()
         if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-            self.coords = pygame.mouse.get_pos()
+            self.down_coords = pygame.mouse.get_pos()
         self.check_click(e)
         if self.is_clicked:
             pos = pygame.mouse.get_pos()
