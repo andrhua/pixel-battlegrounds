@@ -119,6 +119,7 @@ class LoginScreen(Screen):
             if 'INVALID_EMAIL' in e:
                 self.widgets[5].set_text(self.WRONG_EMAIL)
             if 'EMAIL_NOT_VERIFIED' in e:
+                self.context.auth.send_email_verification(self.get_token())
                 self.widgets[5].set_text(self.NOT_VERIFIED_EMAIL)
             self.widgets[2].is_editable = True
             self.widgets[3].is_editable = True

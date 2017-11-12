@@ -1,5 +1,6 @@
 from enum import Enum
 
+import os
 import pygame
 import pyrebase
 
@@ -20,6 +21,9 @@ class Game:
         pygame.key.set_repeat(400, 50)
         Assets()
         self.init_pyrebase()
+        path = 'data'
+        if not os.path.exists(path):
+            os.makedirs(path)
         screen = pygame.display.set_mode((Setts.screen_width, Setts.screen_height))
         info = pygame.display.Info()
         Consts.click_deadzone = int(info.current_w / 200)
