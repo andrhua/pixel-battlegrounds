@@ -5,8 +5,8 @@ class Constants:
     game_field_width = 44
     game_field_height = 22
     scroll_amount = 0.1
-    upscale_limit = 40
-    downscale_limit = game_field_width * 2
+    upscale_limit = 30
+    downscale_limit = int(3 * game_field_width / 2)
     text_regular_size = 50
     text_logo_size = 80
     text_small_size = 40

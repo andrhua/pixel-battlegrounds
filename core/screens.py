@@ -313,8 +313,8 @@ class GameScreen(Screen):
 
     def update_coords(self):
         pos = pygame.mouse.get_pos()
-        x = int(pos[0] * (self.camera.w / Setts.screen_width) + self.camera.x)
-        y = int(pos[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
+        x = int(pos[0] * (self.camera.w / Setts.screen_width) + self.camera.x)+1
+        y = Consts.game_field_height - int(pos[1] * (self.camera.h / Setts.screen_height) + self.camera.y)
         self.widgets[3].set_text(str('(')+str(x)+', '+str(y)+')')
 
     def update(self, delta):
@@ -427,7 +427,7 @@ class GameScreen(Screen):
 
     def set_waiting_mode(self, code):
         if code == 1:
-            self.next_draw = 5*1000#0 * 90 * 1000
+            self.next_draw = 60*1000#0 * 90 * 1000
         self.palette.enabled = False
         self.widgets[2].enabled = True
         self.is_waiting = True
