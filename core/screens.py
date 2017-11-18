@@ -98,8 +98,8 @@ class LoginScreen(Screen):
         email = self.load(self.EMAIL)
         if email is not None:
             self.context.last_exit = self.load(self.LAST_EXIT)
-            #self.login_task = AsyncTask(self.login, email, self.load(self.PASS))
-            #self.login_task.execute()
+            self.login_task = AsyncTask(self.login, email, self.load(self.PASS))
+            self.login_task.execute()
 
     def login(self, email, password):
         def handle_exception(e):
@@ -377,7 +377,7 @@ class GameScreen(Screen):
                     offset_x = 0
                     offset_y = 0
                 self.inflate_camera(offset_x, offset_y)
-        elif e.type == pygame.MOUSEBUTTONUP and e.button == 1:
+        if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
             self.is_lmb_held = False
         self.check_click(e)
         if self.is_clicked:
