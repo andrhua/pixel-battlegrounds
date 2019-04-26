@@ -4,8 +4,10 @@ import os
 import pygame
 import pyrebase
 
-from assets.assets import Assets
-from core.screens import LoginScreen, Context, GameScreen
+from resources.assets import Assets
+from core.game_screen import GameScreen
+from core.login_screen import LoginScreen
+from core.screens import Context
 from util.constants import Constants as Consts
 from util.settings import Settings as Setts
 
@@ -28,7 +30,7 @@ class Game:
         info = pygame.display.Info()
         Consts.click_deadzone = int(info.current_w / 200)
         pygame.display.set_caption(Setts.display_caption)
-        from assets.colors import Colors
+        from resources.colors import Colors
         screen.fill(Colors.messy_white)
         self.clock = pygame.time.Clock()
         self.queries = []
