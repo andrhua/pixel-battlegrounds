@@ -99,26 +99,28 @@ class LoginScreen(Screen):
         style_edit_text = TextFormStyle(Assets.font_regular, Colors.BLACK, Colors.GREY, Colors.WHITE, Align.center)
         size = Assets.font_logo.size(LoginScreen.APP_NAME)
         self.add_widget('app_label', TextLabel(LoginScreen.APP_NAME,
-                                               (Constants.SCREEN_WIDTH / 2 - size[0] / 2,
-                                                .25 * Constants.SCREEN_HEIGHT - size[1] / 2),
+                                               Constants.SCREEN_WIDTH / 2 - size[0] / 2,
+                                               .25 * Constants.SCREEN_HEIGHT - size[1] / 2,
                                                style_logo))
         size = Assets.font_regular.size('sign in / register')
         self.add_widget('login', TextLabel('sign in / register',
-                                           (Constants.SCREEN_WIDTH / 2 - size[0] / 2,
-                                            .45 * Constants.SCREEN_HEIGHT - size[1] / 2),
+                                           Constants.SCREEN_WIDTH / 2 - size[0] / 2,
+                                           .45 * Constants.SCREEN_HEIGHT - size[1] / 2,
                                            style_regular))
         size = Assets.font_regular.size(LoginScreen.EMAIL_HINT)
         self.add_widget('email_form', TextForm(LoginScreen.EMAIL_HINT,
-                                               (Constants.SCREEN_WIDTH / 2 - size[0] / 2, .55 * Constants.SCREEN_HEIGHT),
+
+                                               Constants.SCREEN_WIDTH / 2 - size[0] / 2, .55 * Constants.SCREEN_HEIGHT,
                                                style_edit_text))
         size = Assets.font_regular.size(LoginScreen.PASSWORD_HINT)
-        self.add_widget('password_form', TextForm(LoginScreen.PASSWORD_HINT, (
-            Constants.SCREEN_WIDTH / 2 - size[0] / 2, .65 * Constants.SCREEN_HEIGHT),
+        self.add_widget('password_form', TextForm(LoginScreen.PASSWORD_HINT,
+                                                  Constants.SCREEN_WIDTH / 2 - size[0] / 2,
+                                                  .65 * Constants.SCREEN_HEIGHT,
                                                   style_edit_text, True))
         self.add_widget('loader', SpriteImage(
-            (Constants.SCREEN_WIDTH / 2 - Constants.FRAME_WIDTH / 2, .78 * Constants.SCREEN_HEIGHT)))
+            Constants.SCREEN_WIDTH / 2 - Constants.FRAME_WIDTH / 2, .78 * Constants.SCREEN_HEIGHT))
         self.add_widget('login_feedback', TextLabel('',
-                                                    (Constants.SCREEN_WIDTH / 2, 9 * Constants.SCREEN_HEIGHT / 10),
+                                                    Constants.SCREEN_WIDTH / 2, 9 * Constants.SCREEN_HEIGHT / 10,
                                                     style_status))
         self.get_widget('login_feedback').enabled = False
 

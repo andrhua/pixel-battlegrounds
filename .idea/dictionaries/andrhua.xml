@@ -2,6 +2,7 @@
   <dictionary name="andrhua">
     <words>
       <w>cooldown</w>
+      <w>hitbox</w>
     </words>
   </dictionary>
 </component>

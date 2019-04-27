@@ -6,11 +6,11 @@ from util.constants import Constants
 
 
 class Widget:
-    def __init__(self, dimensions, dest):
-        self.width = int(dimensions[0])
-        self.height = int(dimensions[1])
-        self.x = dest[0]
-        self.y = dest[1]
+    def __init__(self, width, height, x, y):
+        self.width = int(width)
+        self.height = int(height)
+        self.x = x
+        self.y = y
         self.canvas = Surface([self.width, self.height]).convert_alpha()
         self.enabled = True
         self.hitbox = Rect(self.x, self.y, self.width, self.height)
@@ -20,10 +20,10 @@ class Widget:
 
     def hit(self, x, y):
         if self.enabled:
-            flag = self.hitbox.collidepoint(x, y)
-            if flag:
+            is_hit = self.hitbox.collidepoint(x, y)
+            if is_hit:
                 self.on_hit()
-            return flag, 'widget'
+            return is_hit, 'widget'
         return False, 'widget'
 
     def update(self, delta):
@@ -37,8 +37,8 @@ class Widget:
 
 
 class SpriteImage(Widget):
-    def __init__(self, dest):
-        super().__init__((Constants.FRAME_WIDTH, 8 * Constants.FRAME_WIDTH), dest)
+    def __init__(self, x, y):
+        super().__init__(Constants.FRAME_WIDTH, 8 * Constants.FRAME_WIDTH, x, y)
         self.image = pygame.image.load('resources/loader.jpg')
         self.i = 0
         self.elapsed = 0

@@ -27,7 +27,8 @@ class GameScreen(Screen):
         self.canvas = pygame.Surface(
             [Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT]).convert_alpha()
         self.canvas.fill(Colors.ALMOST_WHITE)
-        self.camera = Rect(0, 0, Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_WIDTH * Constants.SCREEN_HEIGHT / Constants.SCREEN_WIDTH)
+        self.camera = Rect(0, 0, Constants.BATTLEGROUND_WIDTH,
+                           Constants.BATTLEGROUND_WIDTH * Constants.SCREEN_HEIGHT / Constants.SCREEN_WIDTH)
         self.is_lmb_held = False
         self.is_cooldown = False
         self.camera_x = 0
@@ -56,14 +57,14 @@ class GameScreen(Screen):
         self.add_widget('color_picker', ColorPicker(Colors.SEMITRANSPARENT_BLACK))
         text_view_style = TextLabelStyle(Assets.font_small, Colors.WHITE, Colors.SEMITRANSPARENT_BLACK)
         self.add_widget('round_clock',
-                        TextLabel('20:18', (Constants.SCREEN_WIDTH / 2, 0), text_view_style,
-                                  (.05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT)))
+                        TextLabel('20:18', Constants.SCREEN_WIDTH / 2, 0, text_view_style,
+                                  .05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT))
         self.add_widget('cooldown_clock',
-                        TextLabel('20:24', (Constants.SCREEN_WIDTH / 2, 9 * Constants.SCREEN_HEIGHT / 10),
+                        TextLabel('20:24', Constants.SCREEN_WIDTH / 2, 9 * Constants.SCREEN_HEIGHT / 10,
                                   text_view_style,
-                                  (.05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT)))
+                                  .05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT))
         self.add_widget('location',
-                        TextLabel('(22, 48)', (0, 0), text_view_style)
+                        TextLabel('(22, 48)', 0, 0, text_view_style)
                         )
         self.get_widget('cooldown_clock').enabled = False
 

@@ -8,12 +8,12 @@ from util.constants import Constants
 
 
 class TextLabel(Widget):
-    def __init__(self, text, dest, style, dimensions=None):
-        if dimensions is None:
-            size = style.font.size(text)
-            super().__init__(size, dest)
+    def __init__(self, text, x, y, style, width=None, height=None):
+        if width is None:
+            w, h = style.font.size(text)
+            super().__init__(w, h, x, y)
         else:
-            super().__init__(dimensions, dest)
+            super().__init__(width, height, x, y)
         self.text = text
         self.style = style
         self.update_dest(text)
@@ -21,21 +21,19 @@ class TextLabel(Widget):
 
     def draw(self, canvas):
         if self.enabled:
-            canvas.blit(self.canvas, self.dest)
+            canvas.blit(self.canvas, (self.x, self.y))
 
     def update_canvas(self):
-        if self.style.bg_color is not None:
-            pygame.draw.rect(self.canvas, self.style.bg_color, Rect(0, 0, self.width, self.height))
-            size = self.style.font.size(self.text)
+        if self.style.background_color is not None:
+            pygame.draw.rect(self.canvas, self.style.background_color, Rect(0, 0, self.width, self.height))
+            text_width, text_height = self.style.font.size(self.text)
             self.canvas.blit(self.style.font.render(self.text, True, self.style.text_color, None),
-                             (self.width/2-size[0]/2, self.height/2-size[1]/2))
+                             (self.width/2 - text_width/2, self.height/2 - text_height / 2))
         else:
             self.canvas = self.style.font.render(self.text, True, self.style.text_color, None)
 
     def update_size(self):
-        size = self.style.font.size(self.text)
-        self.width = size[0]
-        self.height = size[1]
+        self.width, self.height = self.style.font.size(self.text)
 
     def set_text(self, text):
         self.text = text
@@ -43,14 +41,14 @@ class TextLabel(Widget):
         self.update_canvas()
 
     def update_dest(self, text):
-        size = self.style.font.size(text)
+        text_width, text_height = self.style.font.size(text)
         if self.style.align == Align.left:
             left = self.x
         elif self.style.align == Align.center:
-            left = self.x + self.width / 2 - size[0] / 2
+            left = self.x + self.width / 2 - text_width / 2
         else:
-            left = self.x + self.width - size[0]
-        self.dest = (left, self.y)
+            left = self.x + self.width - text_width
+        self.x = left
 
     def set_text_color(self, text_color):
         self.style.text_color = text_color
@@ -61,14 +59,14 @@ class TextLabel(Widget):
 
 
 class TextForm(TextLabel):
-    def __init__(self, hint, dest, style, is_protected=False):
+    def __init__(self, hint, x, y, style, is_protected=False):
         self.has_focus = False
         self.index = 0
         self.elapsed_time = 0
         self.is_protected = is_protected
         self.editable_text = ''
         self.is_editable = True
-        super().__init__(hint, dest, style)
+        super().__init__(hint, x, y, style)
 
     def get_hidden_str(self):
         return '*' * len(self.editable_text)
@@ -77,15 +75,15 @@ class TextForm(TextLabel):
         if len(self.editable_text) > 0:
             self.canvas = self.style.font.render(
                 self.editable_text if not self.is_protected else self.get_hidden_str(),
-                True, self.style.text_color if self.is_editable else Colors.SEMITRANSPARENT_GREY, self.style.bg_color)
+                True, self.style.text_color if self.is_editable else Colors.SEMITRANSPARENT_GREY, self.style.background_color)
             self.update_dest(self.editable_text if not self.is_protected else self.get_hidden_str())
         else:
-            self.canvas = self.style.font.render(self.text, True, self.style.hint_color, self.style.bg_color)
+            self.canvas = self.style.font.render(self.text, True, self.style.hint_color, self.style.background_color)
             self.update_dest(self.text)
         if self.has_focus and self.is_visible:
             x = self.style.font.size(
-                (self.editable_text if not self.is_protected else self.get_hidden_str())[:self.index])
-            x = x[0] + (-1 if self.index > 0 else 1) * Constants.LINE_WIDTH
+                (self.editable_text if not self.is_protected else self.get_hidden_str())[:self.index])[0]
+            x = x + (-1 if self.index > 0 else 1) * Constants.LINE_WIDTH
             pygame.draw.line(self.canvas, Colors.BLACK, (x, 0), (x, self.height), Constants.LINE_WIDTH)
         pygame.draw.line(self.canvas, Colors.BLACK, (0, self.height - 3 * Constants.LINE_WIDTH),
                          (self.canvas.get_width(), self.height - 3 * Constants.LINE_WIDTH),
