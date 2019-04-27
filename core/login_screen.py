@@ -9,7 +9,6 @@ from ui.textlabel import TextLabel, TextForm
 from ui.widget import SpriteImage
 from util.async_task import AsyncTask
 from util.constants import Constants
-from util.settings import Settings
 
 
 class LoginScreen(Screen):
@@ -85,7 +84,7 @@ class LoginScreen(Screen):
     def init_battleground(self):
         def get_default_color():
             from random import choice
-            return {'color': choice(Colors.game)}
+            return {'color': choice(Colors.game_colors)}
 
         pixels = {}
         for i in range(0, Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT):
@@ -100,26 +99,26 @@ class LoginScreen(Screen):
         style_edit_text = TextFormStyle(Assets.font_regular, Colors.black, Colors.grey, Colors.white, Align.center)
         size = Assets.font_logo.size(LoginScreen.APP_NAME)
         self.add_widget('app_label', TextLabel(LoginScreen.APP_NAME,
-                                               (Settings.screen_width / 2 - size[0] / 2,
-                                                .25 * Settings.screen_height - size[1] / 2),
+                                               (Constants.SCREEN_WIDTH / 2 - size[0] / 2,
+                                                .25 * Constants.SCREEN_HEIGHT - size[1] / 2),
                                                style_logo))
         size = Assets.font_regular.size('sign in / register')
         self.add_widget('login', TextLabel('sign in / register',
-                                           (Settings.screen_width / 2 - size[0] / 2,
-                                            .45 * Settings.screen_height - size[1] / 2),
+                                           (Constants.SCREEN_WIDTH / 2 - size[0] / 2,
+                                            .45 * Constants.SCREEN_HEIGHT - size[1] / 2),
                                            style_regular))
         size = Assets.font_regular.size(LoginScreen.EMAIL_HINT)
         self.add_widget('email_form', TextForm(LoginScreen.EMAIL_HINT,
-                                               (Settings.screen_width / 2 - size[0] / 2, .55 * Settings.screen_height),
+                                               (Constants.SCREEN_WIDTH / 2 - size[0] / 2, .55 * Constants.SCREEN_HEIGHT),
                                                style_edit_text))
         size = Assets.font_regular.size(LoginScreen.PASSWORD_HINT)
         self.add_widget('password_form', TextForm(LoginScreen.PASSWORD_HINT, (
-            Settings.screen_width / 2 - size[0] / 2, .65 * Settings.screen_height),
+            Constants.SCREEN_WIDTH / 2 - size[0] / 2, .65 * Constants.SCREEN_HEIGHT),
                                                   style_edit_text, True))
         self.add_widget('loader', SpriteImage(
-            (Settings.screen_width / 2 - Constants.FRAME_WIDTH / 2, .78 * Settings.screen_height)))
+            (Constants.SCREEN_WIDTH / 2 - Constants.FRAME_WIDTH / 2, .78 * Constants.SCREEN_HEIGHT)))
         self.add_widget('login_feedback', TextLabel('',
-                                                    (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
+                                                    (Constants.SCREEN_WIDTH / 2, 9 * Constants.SCREEN_HEIGHT / 10),
                                                     style_status))
         self.get_widget('login_feedback').enabled = False
 

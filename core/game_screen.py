@@ -11,7 +11,6 @@ from ui.styles import TextLabelStyle
 from ui.textlabel import TextLabel
 from ui.button import ColorPicker
 from util.constants import Constants
-from util.settings import Settings
 
 
 class GameScreen(Screen):
@@ -22,12 +21,13 @@ class GameScreen(Screen):
 
     def __init__(self, context):
         super().__init__(context)
+        self.color_picker = self.get_widget('color_picker')
         self.db = self.context.firebase.database()
         self.pixels_stream = self.db.child(self.PIXELS).stream(self.receive_pixel, self.get_token())
         self.canvas = pygame.Surface(
             [Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT]).convert_alpha()
         self.canvas.fill(Colors.messy_white)
-        self.camera = Rect(0, 0, Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT)
+        self.camera = Rect(0, 0, Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_WIDTH * Constants.SCREEN_HEIGHT / Constants.SCREEN_WIDTH)
         self.is_lmb_held = False
         self.is_cooldown = False
         self.camera_x = 0
@@ -56,17 +56,16 @@ class GameScreen(Screen):
         self.add_widget('color_picker', ColorPicker(Colors.transparent_black))
         text_view_style = TextLabelStyle(Assets.font_small, Colors.white, Colors.transparent_black)
         self.add_widget('round_clock',
-                        TextLabel('20:18', (Settings.screen_width / 2, 0), text_view_style,
-                                  (.05 * Settings.screen_width, .065 * Settings.screen_height)))
+                        TextLabel('20:18', (Constants.SCREEN_WIDTH / 2, 0), text_view_style,
+                                  (.05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT)))
         self.add_widget('cooldown_clock',
-                        TextLabel('20:24', (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
+                        TextLabel('20:24', (Constants.SCREEN_WIDTH / 2, 9 * Constants.SCREEN_HEIGHT / 10),
                                   text_view_style,
-                                  (.05 * Settings.screen_width, .065 * Settings.screen_height)))
+                                  (.05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT)))
         self.add_widget('location',
                         TextLabel('(22, 48)', (0, 0), text_view_style)
                         )
         self.get_widget('cooldown_clock').enabled = False
-        self.color_picker = self.get_widget('color_picker')
 
     def update_user_token(self, delta):
         self.passed_time += delta
@@ -93,10 +92,10 @@ class GameScreen(Screen):
             ('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
 
     def update_pointer(self):
-        pos = pygame.mouse.get_pos()
-        x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x) + 1
-        y = Constants.BATTLEGROUND_HEIGHT - int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
-        self.get_widget('location').set_text(str('(') + str(x) + ', ' + str(y) + ')')
+        x, y = pygame.mouse.get_pos()
+        x = int(x * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
+        y = Constants.BATTLEGROUND_HEIGHT - int(y * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
+        self.get_widget('location').set_text('({}, {})'.format(x, y))
 
     def update(self, delta):
         if (delta > 1000 or delta < 0) and self.next_draw > 0:
@@ -118,7 +117,7 @@ class GameScreen(Screen):
         camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
         camera_canvas.fill(Colors.messy_white)
         camera_canvas.blit(self.canvas, (0, 0), Rect(self.camera_x, self.camera_y, self.camera.w, self.camera.h))
-        camera_canvas = pygame.transform.scale(camera_canvas, (Settings.screen_width, Settings.screen_width))
+        camera_canvas = pygame.transform.scale(camera_canvas, (Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
         screen.blit(camera_canvas, (0, 0))
 
     def draw_projection(self):
@@ -184,12 +183,12 @@ class GameScreen(Screen):
     def check_fill(self):
         pos = pygame.mouse.get_pos()
         if self.color_picker.selected != -1:
-            if pos[1] <= 9 * Settings.screen_height / 10:
+            if pos[1] <= 9 * Constants.SCREEN_HEIGHT / 10:
                 self.target.gone = False
-                x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x)
-                y = int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
+                x = int(pos[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
+                y = int(pos[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
                 if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
-                    self.target.commit((x, y), Colors.game[self.color_picker.selected],
+                    self.target.commit((x, y), Colors.game_colors[self.color_picker.selected],
                                        self.canvas.get_at((x, y)))
                 else:
                     self.target.gone = True
@@ -200,8 +199,8 @@ class GameScreen(Screen):
 
     def move_field(self):
         pos = pygame.mouse.get_pos()
-        self.camera_x += (self.prev_coords[0] - pos[0]) * (self.camera.w / Settings.screen_width)
-        self.camera_y += (self.prev_coords[1] - pos[1]) * (self.camera.h / Settings.screen_height)
+        self.camera_x += (self.prev_coords[0] - pos[0]) * (self.camera.w / Constants.SCREEN_WIDTH)
+        self.camera_y += (self.prev_coords[1] - pos[1]) * (self.camera.h / Constants.SCREEN_HEIGHT)
         self.camera.__setattr__('x', self.camera_x)
         self.camera.__setattr__('y', self.camera_y)
         self.prev_coords = pos
@@ -214,12 +213,12 @@ class GameScreen(Screen):
         self.is_cooldown = True
 
     def conquer_pixel(self):
-        if self.prev_coords[1] <= 9 * Settings.screen_height / 10:
-            x = int(self.prev_coords[0] * (self.camera.w / Settings.screen_width) + self.camera.x)
-            y = int(self.prev_coords[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
+        if self.prev_coords[1] <= 9 * Constants.SCREEN_HEIGHT / 10:
+            x = int(self.prev_coords[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
+            y = int(self.prev_coords[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
             if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
                 self.set_waiting_mode(1)
-                colors = Colors.game[self.color_picker.selected]
+                colors = Colors.game_colors[self.color_picker.selected]
                 self.pixels_queue.append(((x, y), colors))
 
     def send_pixel(self):

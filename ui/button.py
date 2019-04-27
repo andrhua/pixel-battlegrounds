@@ -5,7 +5,6 @@ from resources.colors import Colors
 from ui.styles import Align, ButtonStyle
 from ui.widget import Widget
 from util.constants import Constants
-from util.settings import Settings
 
 
 class Button(Widget):
@@ -20,7 +19,7 @@ class Button(Widget):
         self.update_canvas()
 
     def update_canvas(self):
-        pygame.draw.rect(self.canvas, self.style.bg_color, Rect(0, 0, self.width, self.height))
+        pygame.draw.rect(self.canvas, self.style.background_color, Rect(0, 0, self.width, self.height))
 
     def draw(self, canvas):
         if self.pressed:
@@ -62,16 +61,17 @@ class TextButton(Button):
 
 class ColorPicker(Widget):
     def __init__(self, bg_color):
-        super().__init__((Settings.screen_width, Settings.screen_height / 10), (0, Settings.screen_height * 9 / 10))
+        super().__init__((Constants.SCREEN_WIDTH, Constants.COLOR_PICKER_HEIGHT), (0, Constants.SCREEN_HEIGHT -  Constants.COLOR_PICKER_HEIGHT))
         self.bg_color = bg_color
         self.buttons = []
         self.selected = -1
         style = ButtonStyle(None)
-        for i in range(0, 19):
-            style.bg_color = Colors.game[i]
-            self.buttons.append(Button((Constants.COLOR_BUTTON_WIDTH, Constants.COLOR_BUTTON_WIDTH),
-                                       ((i + 1) * Settings.screen_width / 20 - Constants.COLOR_BUTTON_WIDTH / 2,
-                                        Settings.screen_height / 20 - Constants.COLOR_BUTTON_WIDTH / 2),
+        for i, color in enumerate(Colors.game_colors):
+            number_of_colors = len(Colors.game_colors)
+            style.background_color = color
+            self.buttons.append(Button((Constants.COLOR_BUTTON_SIZE, Constants.COLOR_BUTTON_SIZE),
+                                       ((i + 1) * Constants.SCREEN_WIDTH / (number_of_colors + 1) - Constants.COLOR_BUTTON_SIZE / 2,
+                                        Constants.COLOR_PICKER_HEIGHT / 3 - Constants.COLOR_BUTTON_SIZE / 2),
                                        style))
         self.update_canvas()
 

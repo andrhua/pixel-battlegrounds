@@ -11,4 +11,3 @@ class AsyncTask:
 
     def is_running(self):
         return self.thread.is_alive()
-

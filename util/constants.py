@@ -1,6 +1,3 @@
-from util.settings import Settings
-
-
 class Constants:
     BATTLEGROUND_WIDTH = 100
     BATTLEGROUND_HEIGHT = 100
@@ -13,11 +10,18 @@ class Constants:
     LINE_WIDTH = 1
     CURSOR_ON_TIME = 850
     CURSOR_OFF_TIME = 720
-    COLOR_BUTTON_WIDTH = 50
-    PRESSED_COLOR_WIDTH = 40
+    COLOR_BUTTON_SIZE = 20
+    PRESSED_COLOR_WIDTH = 10
     FRAME_WIDTH = 64
-    RATIO = BATTLEGROUND_WIDTH / BATTLEGROUND_HEIGHT
-    CANVAS_WIDTH = Settings.screen_width
-    CANVAS_HEIGHT = int(CANVAS_WIDTH / RATIO)
     CLICK_DEAD_ZONE = 0
+    SCREEN_WIDTH = 0
+    SCREEN_HEIGHT = 0
+    COLOR_PICKER_HEIGHT = 0
+
+    def __init__(self, display_info):
+        Constants.SCREEN_WIDTH = display_info.current_w
+        Constants.SCREEN_HEIGHT = display_info.current_h
+        Constants.CLICK_DEAD_ZONE = display_info.current_w / 200
+        Constants.COLOR_BUTTON_SIZE = Constants.SCREEN_HEIGHT * .06
+        Constants.COLOR_PICKER_HEIGHT = Constants.SCREEN_HEIGHT * .15
 

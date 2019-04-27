@@ -39,7 +39,7 @@ class Widget:
 class SpriteImage(Widget):
     def __init__(self, dest):
         super().__init__((Constants.FRAME_WIDTH, 8 * Constants.FRAME_WIDTH), dest)
-        self.image = pygame.image.load('resources/load.jpg')
+        self.image = pygame.image.load('resources/loader.jpg')
         self.i = 0
         self.elapsed = 0
         self.limit = 125

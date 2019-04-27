@@ -6,7 +6,6 @@ import pygame
 
 from resources.colors import Colors
 from util.constants import Constants as Consts
-from util.settings import Settings
 
 
 class Screen:

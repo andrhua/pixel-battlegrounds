@@ -23,7 +23,7 @@ class TextFormStyle(TextLabelStyle):
 
 class ButtonStyle:
     def __init__(self, bg_color):
-        self.bg_color = bg_color
+        self.background_color = bg_color
 
 
 class TextButtonStyle(ButtonStyle):
