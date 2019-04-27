@@ -69,9 +69,9 @@ class ColorPicker(Widget):
         style = ButtonStyle(None)
         for i in range(0, 19):
             style.bg_color = Colors.game[i]
-            self.buttons.append(Button((Constants.color_width, Constants.color_width),
-                                       ((i + 1) * Settings.screen_width / 20 - Constants.color_width / 2,
-                                        Settings.screen_height / 20 - Constants.color_width / 2),
+            self.buttons.append(Button((Constants.COLOR_BUTTON_WIDTH, Constants.COLOR_BUTTON_WIDTH),
+                                       ((i + 1) * Settings.screen_width / 20 - Constants.COLOR_BUTTON_WIDTH / 2,
+                                        Settings.screen_height / 20 - Constants.COLOR_BUTTON_WIDTH / 2),
                                        style))
         self.update_canvas()
 

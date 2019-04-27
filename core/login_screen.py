@@ -88,7 +88,7 @@ class LoginScreen(Screen):
             return {'color': choice(Colors.game)}
 
         pixels = {}
-        for i in range(0, Constants.game_field_width * Constants.game_field_height):
+        for i in range(0, Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT):
             pixels[str(i)] = get_default_color()
         self.context.firebase.database().child('pixels').remove(self.get_token())
         self.context.firebase.database().child('pixels').set(pixels, self.get_token())
@@ -117,7 +117,7 @@ class LoginScreen(Screen):
             Settings.screen_width / 2 - size[0] / 2, .65 * Settings.screen_height),
                                                   style_edit_text, True))
         self.add_widget('loader', SpriteImage(
-            (Settings.screen_width / 2 - Constants.frame_width / 2, .78 * Settings.screen_height)))
+            (Settings.screen_width / 2 - Constants.FRAME_WIDTH / 2, .78 * Settings.screen_height)))
         self.add_widget('login_feedback', TextLabel('',
                                                     (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
                                                     style_status))

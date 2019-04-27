@@ -25,9 +25,9 @@ class GameScreen(Screen):
         self.db = self.context.firebase.database()
         self.pixels_stream = self.db.child(self.PIXELS).stream(self.receive_pixel, self.get_token())
         self.canvas = pygame.Surface(
-            [Constants.game_field_width, Constants.game_field_height]).convert_alpha()
+            [Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT]).convert_alpha()
         self.canvas.fill(Colors.messy_white)
-        self.camera = Rect(0, 0, Constants.game_field_width, Constants.game_field_height)
+        self.camera = Rect(0, 0, Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT)
         self.is_lmb_held = False
         self.is_cooldown = False
         self.camera_x = 0
@@ -95,7 +95,7 @@ class GameScreen(Screen):
     def update_pointer(self):
         pos = pygame.mouse.get_pos()
         x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x) + 1
-        y = Constants.game_field_height - int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
+        y = Constants.BATTLEGROUND_HEIGHT - int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
         self.get_widget('location').set_text(str('(') + str(x) + ', ' + str(y) + ')')
 
     def update(self, delta):
@@ -144,16 +144,16 @@ class GameScreen(Screen):
                 self.down_coords = pygame.mouse.get_pos()
                 self.prev_coords = self.down_coords
             if e.button == 4:  # zoom in
-                offset_x = -self.camera.w * Constants.scroll_amount
-                offset_y = -self.camera.h * Constants.scroll_amount
-                if self.camera.w + offset_x <= Constants.upscale_limit:
+                offset_x = -self.camera.w * Constants.SCROLL_STEP
+                offset_y = -self.camera.h * Constants.SCROLL_STEP
+                if self.camera.w + offset_x <= Constants.UPSCALE_BOUND:
                     offset_x = 0
                     offset_y = 0
                 self.inflate_camera(offset_x, offset_y)
             if e.button == 5:  # zoom out
-                offset_x = self.camera.w * Constants.scroll_amount
-                offset_y = self.camera.h * Constants.scroll_amount
-                if self.camera.w + offset_x > Constants.downscale_limit:
+                offset_x = self.camera.w * Constants.SCROLL_STEP
+                offset_y = self.camera.h * Constants.SCROLL_STEP
+                if self.camera.w + offset_x > Constants.DOWNSCALE_BOUND:
                     offset_x = 0
                     offset_y = 0
                 self.inflate_camera(offset_x, offset_y)
@@ -188,7 +188,7 @@ class GameScreen(Screen):
                 self.target.gone = False
                 x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x)
                 y = int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
-                if 0 <= x < Constants.game_field_width and 0 <= y < Constants.game_field_height:
+                if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
                     self.target.commit((x, y), Colors.game[self.color_picker.selected],
                                        self.canvas.get_at((x, y)))
                 else:
@@ -217,7 +217,7 @@ class GameScreen(Screen):
         if self.prev_coords[1] <= 9 * Settings.screen_height / 10:
             x = int(self.prev_coords[0] * (self.camera.w / Settings.screen_width) + self.camera.x)
             y = int(self.prev_coords[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
-            if 0 <= x < Constants.game_field_width and 0 <= y < Constants.game_field_height:
+            if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
                 self.set_waiting_mode(1)
                 colors = Colors.game[self.color_picker.selected]
                 self.pixels_queue.append(((x, y), colors))
@@ -228,7 +228,7 @@ class GameScreen(Screen):
                 pixel = self.pixels_queue.pop(0)
                 dest = pixel[0]
                 colors = pixel[1]
-                self.db.child(self.PIXELS).child(str(dest[0] + dest[1] * Constants.game_field_width)).update(
+                self.db.child(self.PIXELS).child(str(dest[0] + dest[1] * Constants.BATTLEGROUND_WIDTH)).update(
                     {
                         self.COLOR: colors
                     }, self.get_token())
@@ -237,15 +237,15 @@ class GameScreen(Screen):
         self.count += 1
         if self.count > 1:
             number = int(pixel['path'][1:])
-            x = number % Constants.game_field_width
-            y = int((number - x) / Constants.game_field_width)
+            x = number % Constants.BATTLEGROUND_WIDTH
+            y = int((number - x) / Constants.BATTLEGROUND_WIDTH)
             self.canvas.set_at((x, y), pixel['data'][self.COLOR])
 
     def load_battlegrounds(self):
         pixels = self.db.child(self.PIXELS).get(self.get_token()).val()
-        for j in range(0, Constants.game_field_height):
-            for i in range(0, Constants.game_field_width):
-                self.canvas.set_at((i, j), pixels[i + Constants.game_field_width * j][self.COLOR])
+        for j in range(0, Constants.BATTLEGROUND_HEIGHT):
+            for i in range(0, Constants.BATTLEGROUND_WIDTH):
+                self.canvas.set_at((i, j), pixels[i + Constants.BATTLEGROUND_WIDTH * j][self.COLOR])
 
     def exit(self):
         self.save(self.NEXT_DRAW, self.next_draw)

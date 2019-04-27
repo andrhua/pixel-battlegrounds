@@ -38,7 +38,7 @@ class Widget:
 
 class SpriteImage(Widget):
     def __init__(self, dest):
-        super().__init__((Constants.frame_width, 8 * Constants.frame_width), dest)
+        super().__init__((Constants.FRAME_WIDTH, 8 * Constants.FRAME_WIDTH), dest)
         self.image = pygame.image.load('resources/load.jpg')
         self.i = 0
         self.elapsed = 0
@@ -53,7 +53,7 @@ class SpriteImage(Widget):
             if self.elapsed >= self.limit:
                 self.elapsed %= self.limit
                 self.i = (self.i + 1) % 9
-                self.frame.__setattr__('x', self.i * Constants.frame_width)
+                self.frame.__setattr__('x', self.i * Constants.FRAME_WIDTH)
 
     def draw(self, canvas):
         if self.enabled:

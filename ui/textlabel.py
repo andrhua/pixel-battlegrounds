@@ -85,11 +85,11 @@ class TextForm(TextLabel):
         if self.has_focus and self.is_visible:
             x = self.style.font.size(
                 (self.editable_text if not self.is_protected else self.get_hidden_str())[:self.index])
-            x = x[0] + (-1 if self.index > 0 else 1) * Constants.line_width
-            pygame.draw.line(self.canvas, Colors.black, (x, 0), (x, self.height), Constants.line_width)
-        pygame.draw.line(self.canvas, Colors.black, (0, self.height - 3 * Constants.line_width),
-                         (self.canvas.get_width(), self.height - 3 * Constants.line_width),
-                         Constants.line_width)
+            x = x[0] + (-1 if self.index > 0 else 1) * Constants.LINE_WIDTH
+            pygame.draw.line(self.canvas, Colors.black, (x, 0), (x, self.height), Constants.LINE_WIDTH)
+        pygame.draw.line(self.canvas, Colors.black, (0, self.height - 3 * Constants.LINE_WIDTH),
+                         (self.canvas.get_width(), self.height - 3 * Constants.LINE_WIDTH),
+                         Constants.LINE_WIDTH)
 
     def set_text(self, text):
         self.editable_text = text
@@ -140,7 +140,7 @@ class TextForm(TextLabel):
     def update(self, delta):
         if self.has_focus:
             self.elapsed_time += delta
-            if self.elapsed_time >= (Constants.cursor_on_time if self.is_visible else Constants.cursor_off_time):
+            if self.elapsed_time >= (Constants.CURSOR_ON_TIME if self.is_visible else Constants.CURSOR_OFF_TIME):
                 self.is_visible = not self.is_visible
                 self.elapsed_time = 0
                 self.update_canvas()
