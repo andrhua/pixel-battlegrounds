@@ -19,5 +19,5 @@ class Constants:
     ratio = game_field_width / game_field_height
     canvas_width = Settings.screen_width
     canvas_height = int(canvas_width / ratio)
-    click_deadzone = 0
+    CLICK_DEAD_ZONE = 0
 

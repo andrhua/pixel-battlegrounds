@@ -1,23 +1,18 @@
-from enum import Enum
-
 import os
+
 import pygame
 import pyrebase
 
-from resources.assets import Assets
 from core.game_screen import GameScreen
 from core.login_screen import LoginScreen
 from core.screens import Context
-from util.constants import Constants as Consts
-from util.settings import Settings as Setts
+from resources.assets import Assets
+from resources.colors import Colors
+from util.constants import Constants
+from util.settings import Settings
 
 
-class Screens(Enum):
-    Login = 0
-    Game = 1
-
-
-class Game:
+class PixelBattlegroundsGame:
     def __init__(self):
         pygame.init()
         pygame.key.set_repeat(400, 50)
@@ -26,14 +21,11 @@ class Game:
         path = 'data'
         if not os.path.exists(path):
             os.makedirs(path)
-        screen = pygame.display.set_mode((Setts.screen_width, Setts.screen_height))
-        info = pygame.display.Info()
-        Consts.click_deadzone = int(info.current_w / 200)
-        pygame.display.set_caption(Setts.display_caption)
-        from resources.colors import Colors
+        screen = pygame.display.set_mode((Settings.screen_width, Settings.screen_height))
+        Constants.CLICK_DEAD_ZONE = int(pygame.display.Info().current_w / 200)
+        pygame.display.set_caption(Settings.display_caption)
         screen.fill(Colors.messy_white)
         self.clock = pygame.time.Clock()
-        self.queries = []
         self.context = Context(self, screen, self.firebase, self.auth)
         self.set_screen('login')
 
@@ -52,7 +44,7 @@ class Game:
     def run(self):
         while 1:
             for e in pygame.event.get():
-                self.screen.process_events(e)
+                self.screen.process_input_events(e)
             self.screen.update(self.clock.tick_busy_loop())
             self.screen.draw()
 

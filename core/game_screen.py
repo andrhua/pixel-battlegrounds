@@ -9,7 +9,7 @@ from resources.colors import Colors
 from core.screens import Screen, Target
 from ui.styles import TextLabelStyle
 from ui.textlabel import TextLabel
-from ui.widget import ColorPicker
+from ui.button import ColorPicker
 from util.constants import Constants
 from util.settings import Settings
 
@@ -57,11 +57,11 @@ class GameScreen(Screen):
         text_view_style = TextLabelStyle(Assets.font_small, Colors.white, Colors.transparent_black)
         self.widgets.append(
             TextLabel('20:18', (Settings.screen_width / 2, 0), text_view_style,
-                     (.05 * Settings.screen_width, .065 * Settings.screen_height)))
+                      (.05 * Settings.screen_width, .065 * Settings.screen_height)))
         self.widgets.append(
             TextLabel('20:24', (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
-                     text_view_style,
-                     (.05 * Settings.screen_width, .065 * Settings.screen_height)))
+                      text_view_style,
+                      (.05 * Settings.screen_width, .065 * Settings.screen_height)))
         self.widgets.append(
             TextLabel('(22, 48)', (0, 0), text_view_style)
         )
@@ -92,12 +92,12 @@ class GameScreen(Screen):
 
     def update_coords(self):
         pos = pygame.mouse.get_pos()
-        x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x)+1
+        x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x) + 1
         y = Constants.game_field_height - int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
-        self.widgets[3].set_text(str('(')+str(x)+', '+str(y)+')')
+        self.widgets[3].set_text(str('(') + str(x) + ', ' + str(y) + ')')
 
     def update(self, delta):
-        if (delta > 1000  or delta < 0) and self.next_draw > 0:
+        if (delta > 1000 or delta < 0) and self.next_draw > 0:
             self.next_draw = 60 * 60 * 1000
         self.update_user_token(delta)
         self.update_coords()
@@ -133,7 +133,7 @@ class GameScreen(Screen):
         super().draw()
         self.draw_suggestion()
 
-    def process_events(self, e):
+    def process_input_events(self, e):
         if e.type == pygame.QUIT:
             self.exit()
         if e.type == pygame.MOUSEBUTTONDOWN:
@@ -206,7 +206,7 @@ class GameScreen(Screen):
 
     def set_waiting_mode(self, code):
         if code == 1:
-            self.next_draw = 60*1000#0 * 90 * 1000
+            self.next_draw = 60 * 1000  # 0 * 90 * 1000
         self.palette.enabled = False
         self.widgets[2].enabled = True
         self.is_waiting = True

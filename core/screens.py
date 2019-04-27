@@ -6,6 +6,7 @@ import pygame
 
 from resources.colors import Colors
 from util.constants import Constants as Consts
+from util.settings import Settings
 
 
 class Screen:
@@ -14,7 +15,7 @@ class Screen:
 
     def __init__(self, context):
         self.context = context
-        self.widgets = []
+        self.widgets = {}
         self.init_widgets()
         self.is_clicked = False
         self.down_coords = (0, 0)
@@ -24,22 +25,28 @@ class Screen:
     def init_widgets(self):
         pass
 
-    def process_events(self, e):
+    def add_widget(self, name, widget):
+        self.widgets[name] = widget
+
+    def get_widget(self, name):
+        return self.widgets[name]
+
+    def process_input_events(self, e):
         pass
 
     def check_click(self, e):
         pos = pygame.mouse.get_pos()
         self.is_clicked = e.type == pygame.MOUSEBUTTONUP and \
-                          e.button == 1 and math.fabs(self.down_coords[0] - pos[0]) <= Consts.click_deadzone and \
-                          math.fabs(self.down_coords[1] - pos[1]) <= Consts.click_deadzone
+                          e.button == 1 and math.fabs(self.down_coords[0] - pos[0]) <= Consts.CLICK_DEAD_ZONE and \
+                          math.fabs(self.down_coords[1] - pos[1]) <= Consts.CLICK_DEAD_ZONE
 
     def update(self, delta):
-        for w in self.widgets:
+        for w in self.widgets.values():
             w.update(delta)
 
     def draw(self):
         self.draw_bg(self.context.screen)
-        for w in self.widgets:
+        for w in self.widgets.values():
             w.draw(self.context.screen)
         pygame.display.flip()
 

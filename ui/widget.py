@@ -2,10 +2,7 @@ import pygame
 from pygame.rect import Rect
 from pygame.surface import Surface
 
-from resources.colors import Colors
-from ui.styles import ButtonStyle
 from util.constants import Constants
-from util.settings import Settings
 
 
 class Widget:
@@ -37,49 +34,6 @@ class Widget:
 
     def on_hit(self, *args):
         pass
-
-
-class ColorPicker(Widget):
-    def __init__(self, bg_color):
-        super().__init__((Settings.screen_width, Settings.screen_height / 10), (0, Settings.screen_height * 9 / 10))
-        self.bg_color = bg_color
-        self.buttons = []
-        self.selected = -1
-        style = ButtonStyle(None)
-        for i in range(0, 19):
-            style.bg_color = Colors.game[i]
-            self.buttons.append(Button((Constants.color_width, Constants.color_width),
-                                       ((i + 1) * Settings.screen_width / 20 - Constants.color_width / 2,
-                                        Settings.screen_height / 20 - Constants.color_width / 2),
-                                       style))
-        self.update_canvas()
-
-    def draw(self, canvas):
-        if self.enabled:
-            canvas.blit(self.canvas, (self.x, self.y))
-
-    def hit(self, x, y):
-        if self.enabled:
-            i = 0
-            k = 21
-            k_flag = False
-            for button in self.buttons:
-                if button.hit(x, y - self.y)[0] and button.pressed:
-                    k = i
-                    k_flag = True
-                else:
-                    button.pressed = False
-                i += 1
-            self.update_canvas()
-            return k_flag, 'palette', k
-        return False, 'palette', -1
-
-    def update_canvas(self, *args):
-        self.canvas.fill((0, 0, 0))
-        self.canvas.convert_alpha()
-        pygame.draw.rect(self.canvas, self.bg_color, Rect(0, 0, self.width, self.height))
-        for button in self.buttons:
-            button.draw(self.canvas)
 
 
 class SpriteImage(Widget):
