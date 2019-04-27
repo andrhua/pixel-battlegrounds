@@ -53,20 +53,20 @@ class GameScreen(Screen):
         self.load_game_field()
 
     def init_widgets(self):
-        self.widgets.append(ColorPicker(Colors.transparent_black))
+        self.add_widget('color_picker', ColorPicker(Colors.transparent_black))
         text_view_style = TextLabelStyle(Assets.font_small, Colors.white, Colors.transparent_black)
-        self.widgets.append(
+        self.add_widget('round_clock',
             TextLabel('20:18', (Settings.screen_width / 2, 0), text_view_style,
                       (.05 * Settings.screen_width, .065 * Settings.screen_height)))
-        self.widgets.append(
+        self.add_widget('cooldown_clock',
             TextLabel('20:24', (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
                       text_view_style,
                       (.05 * Settings.screen_width, .065 * Settings.screen_height)))
-        self.widgets.append(
+        self.add_widget('location',
             TextLabel('(22, 48)', (0, 0), text_view_style)
         )
-        self.widgets[2].enabled = False
-        self.palette = self.widgets[0]
+        self.get_widget('cooldown_clock').enabled = False
+        self.color_picker = self.get_widget('color_picker')
 
     def update_user_token(self, delta):
         self.passed_time += delta
@@ -80,7 +80,7 @@ class GameScreen(Screen):
         minutes = int((t / (1000 * 60)) % 60)
         flag_1 = seconds < 10
         flag_2 = minutes < 10
-        self.widgets[1].set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
+        self.get_widget('round_clock').set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
 
     def update_cooldown_clock(self):
         t = self.next_draw
@@ -88,13 +88,13 @@ class GameScreen(Screen):
         minutes = int((t / (1000 * 60)) % 60)
         flag_1 = seconds < 10
         flag_2 = minutes < 10
-        self.widgets[2].set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
+        self.get_widget('cooldown_clock').set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
 
     def update_coords(self):
         pos = pygame.mouse.get_pos()
         x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x) + 1
         y = Constants.game_field_height - int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
-        self.widgets[3].set_text(str('(') + str(x) + ', ' + str(y) + ')')
+        self.get_widget('location').set_text(str('(') + str(x) + ', ' + str(y) + ')')
 
     def update(self, delta):
         if (delta > 1000 or delta < 0) and self.next_draw > 0:
@@ -106,8 +106,8 @@ class GameScreen(Screen):
             self.update_cooldown_clock()
             self.next_draw -= delta
             if self.next_draw <= 0:
-                self.palette.enabled = True
-                self.widgets[2].enabled = False
+                self.color_picker.enabled = True
+                self.get_widget('round_clock').enabled = False
                 self.is_waiting = False
 
         super().update(delta)
@@ -120,7 +120,7 @@ class GameScreen(Screen):
         screen.blit(camera_canvas, (0, 0))
 
     def draw_suggestion(self):
-        if self.palette.selected != -1:
+        if self.color_picker.selected != -1:
             if self.target.different and self.target.prev_color is not None:
                 self.target.different = False
                 pygame.draw.rect(self.canvas, self.target.prev_color,
@@ -161,13 +161,13 @@ class GameScreen(Screen):
         if self.is_clicked:
             pos = pygame.mouse.get_pos()
             flag = False
-            for w in self.widgets:
+            for w in self.widgets.values():
                 flag = w.hit(pos[0], pos[1])
                 if flag[0]:
                     break
-            if not flag[0] and self.palette.selected != -1:
+            if not flag[0] and self.color_picker.selected != -1:
                 self.conquer_pixel()
-            self.palette.selected = flag[2] if flag[0] and flag[1] == 'palette' else -1
+            self.color_picker.selected = flag[2] if flag[0] and flag[1] == 'palette' else -1
         if self.is_lmb_held:
             self.move_field()
         self.check_fill()
@@ -181,13 +181,13 @@ class GameScreen(Screen):
 
     def check_fill(self):
         pos = pygame.mouse.get_pos()
-        if self.palette.selected != -1:
+        if self.color_picker.selected != -1:
             if pos[1] <= 9 * Settings.screen_height / 10:
                 self.target.gone = False
                 x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x)
                 y = int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
                 if 0 <= x < Constants.game_field_width and 0 <= y < Constants.game_field_height:
-                    self.target.commit((x, y), Colors.game[self.palette.selected],
+                    self.target.commit((x, y), Colors.game[self.color_picker.selected],
                                        self.canvas.get_at((x, y)))
                 else:
                     self.target.gone = True
@@ -206,9 +206,9 @@ class GameScreen(Screen):
 
     def set_waiting_mode(self, code):
         if code == 1:
-            self.next_draw = 60 * 1000  # 0 * 90 * 1000
-        self.palette.enabled = False
-        self.widgets[2].enabled = True
+            self.next_draw = 5 * 1000  # 0 * 90 * 1000
+        self.color_picker.enabled = False
+        self.get_widget('cooldown_clock').enabled = True
         self.is_waiting = True
 
     def conquer_pixel(self):
@@ -217,7 +217,7 @@ class GameScreen(Screen):
             y = int(self.prev_coords[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
             if 0 <= x < Constants.game_field_width and 0 <= y < Constants.game_field_height:
                 self.set_waiting_mode(1)
-                colors = Colors.game[self.palette.selected]
+                colors = Colors.game[self.color_picker.selected]
                 self.pixels_queue.append(((x, y), colors))
 
     def send_pixel(self):
