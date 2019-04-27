@@ -2,11 +2,11 @@ from util.settings import Settings
 
 
 class Constants:
-    game_field_width = 44
-    game_field_height = 22
+    game_field_width = 100
+    game_field_height = 100
     scroll_amount = 0.1
     upscale_limit = 30
-    downscale_limit = int(3 * game_field_width / 2)
+    downscale_limit = int(2.25 * game_field_width)
     text_regular_size = 50
     text_logo_size = 80
     text_small_size = 40

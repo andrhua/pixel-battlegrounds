@@ -67,7 +67,7 @@ class LoginScreen(Screen):
         def check_verification():
             info = self.context.auth.get_account_info(self.get_token())
             if info['users'][0]['emailVerified']:
-                # self.initttt()
+                # self.init_battleground()
                 self.context.game.set_screen('game')
             else:
                 handle_exception('EMAIL_NOT_VERIFIED')
@@ -82,15 +82,16 @@ class LoginScreen(Screen):
         else:
             check_verification()
 
-    def initttt(self):
-        def zzza():
-            return {'color': [255, 255, 255]}
+    def init_battleground(self):
+        def get_default_color():
+            from random import choice
+            return {'color': choice(Colors.game)}
 
-        strs = {}
-        for i in range(0, 800000):
-            print(i)
-            strs[str(i)] = zzza()
-        self.context.firebase.database().child('pixels').set(strs, self.get_token())
+        pixels = {}
+        for i in range(0, Constants.game_field_width * Constants.game_field_height):
+            pixels[str(i)] = get_default_color()
+        self.context.firebase.database().child('pixels').remove(self.get_token())
+        self.context.firebase.database().child('pixels').set(pixels, self.get_token())
 
     def init_widgets(self):
         style_regular = TextLabelStyle(Assets.font_regular, Colors.black, None, Align.center)
@@ -116,7 +117,7 @@ class LoginScreen(Screen):
             Settings.screen_width / 2 - size[0] / 2, .65 * Settings.screen_height),
                                                   style_edit_text, True))
         self.add_widget('loader', SpriteImage(
-            (Settings.screen_width / 2 - Constants.frame_width / 2, .73 * Settings.screen_height)))
+            (Settings.screen_width / 2 - Constants.frame_width / 2, .78 * Settings.screen_height)))
         self.add_widget('login_feedback', TextLabel('',
                                                     (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
                                                     style_status))

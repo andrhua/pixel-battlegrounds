@@ -15,7 +15,7 @@ from util.settings import Settings
 
 
 class GameScreen(Screen):
-    PIXELS = 'pixels-test'
+    PIXELS = 'pixels'
     SERVICE = 'service'
     COLOR = 'color'
     NEXT_DRAW = 'next_draw'
@@ -29,7 +29,7 @@ class GameScreen(Screen):
         self.canvas.fill(Colors.messy_white)
         self.camera = Rect(0, 0, Constants.game_field_width, Constants.game_field_height)
         self.is_lmb_held = False
-        self.is_waiting = False
+        self.is_cooldown = False
         self.camera_x = 0
         self.camera_y = 0
         self.count = 0
@@ -50,21 +50,21 @@ class GameScreen(Screen):
         self.pixels_queue = []
         self.send_thread = threading.Thread(target=self.send_pixel, daemon=True)
         self.send_thread.start()
-        self.load_game_field()
+        self.load_battlegrounds()
 
     def init_widgets(self):
         self.add_widget('color_picker', ColorPicker(Colors.transparent_black))
         text_view_style = TextLabelStyle(Assets.font_small, Colors.white, Colors.transparent_black)
         self.add_widget('round_clock',
-            TextLabel('20:18', (Settings.screen_width / 2, 0), text_view_style,
-                      (.05 * Settings.screen_width, .065 * Settings.screen_height)))
+                        TextLabel('20:18', (Settings.screen_width / 2, 0), text_view_style,
+                                  (.05 * Settings.screen_width, .065 * Settings.screen_height)))
         self.add_widget('cooldown_clock',
-            TextLabel('20:24', (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
-                      text_view_style,
-                      (.05 * Settings.screen_width, .065 * Settings.screen_height)))
+                        TextLabel('20:24', (Settings.screen_width / 2, 9 * Settings.screen_height / 10),
+                                  text_view_style,
+                                  (.05 * Settings.screen_width, .065 * Settings.screen_height)))
         self.add_widget('location',
-            TextLabel('(22, 48)', (0, 0), text_view_style)
-        )
+                        TextLabel('(22, 48)', (0, 0), text_view_style)
+                        )
         self.get_widget('cooldown_clock').enabled = False
         self.color_picker = self.get_widget('color_picker')
 
@@ -80,7 +80,8 @@ class GameScreen(Screen):
         minutes = int((t / (1000 * 60)) % 60)
         flag_1 = seconds < 10
         flag_2 = minutes < 10
-        self.get_widget('round_clock').set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
+        self.get_widget('round_clock').set_text(
+            ('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
 
     def update_cooldown_clock(self):
         t = self.next_draw
@@ -88,9 +89,10 @@ class GameScreen(Screen):
         minutes = int((t / (1000 * 60)) % 60)
         flag_1 = seconds < 10
         flag_2 = minutes < 10
-        self.get_widget('cooldown_clock').set_text(('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
+        self.get_widget('cooldown_clock').set_text(
+            ('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
 
-    def update_coords(self):
+    def update_pointer(self):
         pos = pygame.mouse.get_pos()
         x = int(pos[0] * (self.camera.w / Settings.screen_width) + self.camera.x) + 1
         y = Constants.game_field_height - int(pos[1] * (self.camera.h / Settings.screen_height) + self.camera.y)
@@ -100,26 +102,26 @@ class GameScreen(Screen):
         if (delta > 1000 or delta < 0) and self.next_draw > 0:
             self.next_draw = 60 * 60 * 1000
         self.update_user_token(delta)
-        self.update_coords()
+        self.update_pointer()
         self.update_round_clock()
-        if self.is_waiting:
+        if self.is_cooldown:
             self.update_cooldown_clock()
             self.next_draw -= delta
             if self.next_draw <= 0:
                 self.color_picker.enabled = True
-                self.get_widget('round_clock').enabled = False
-                self.is_waiting = False
+                self.get_widget('cooldown_clock').enabled = False
+                self.is_cooldown = False
 
         super().update(delta)
 
-    def draw_bg(self, screen):
+    def draw_background(self, screen):
         camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
         camera_canvas.fill(Colors.messy_white)
         camera_canvas.blit(self.canvas, (0, 0), Rect(self.camera_x, self.camera_y, self.camera.w, self.camera.h))
-        camera_canvas = pygame.transform.scale(camera_canvas, (Settings.screen_width, Settings.screen_height))
+        camera_canvas = pygame.transform.scale(camera_canvas, (Settings.screen_width, Settings.screen_width))
         screen.blit(camera_canvas, (0, 0))
 
-    def draw_suggestion(self):
+    def draw_projection(self):
         if self.color_picker.selected != -1:
             if self.target.different and self.target.prev_color is not None:
                 self.target.different = False
@@ -131,7 +133,7 @@ class GameScreen(Screen):
 
     def draw(self):
         super().draw()
-        self.draw_suggestion()
+        self.draw_projection()
 
     def process_input_events(self, e):
         if e.type == pygame.QUIT:
@@ -209,7 +211,7 @@ class GameScreen(Screen):
             self.next_draw = 5 * 1000  # 0 * 90 * 1000
         self.color_picker.enabled = False
         self.get_widget('cooldown_clock').enabled = True
-        self.is_waiting = True
+        self.is_cooldown = True
 
     def conquer_pixel(self):
         if self.prev_coords[1] <= 9 * Settings.screen_height / 10:
@@ -239,7 +241,7 @@ class GameScreen(Screen):
             y = int((number - x) / Constants.game_field_width)
             self.canvas.set_at((x, y), pixel['data'][self.COLOR])
 
-    def load_game_field(self):
+    def load_battlegrounds(self):
         pixels = self.db.child(self.PIXELS).get(self.get_token()).val()
         for j in range(0, Constants.game_field_height):
             for i in range(0, Constants.game_field_width):

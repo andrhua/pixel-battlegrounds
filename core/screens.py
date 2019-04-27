@@ -45,12 +45,12 @@ class Screen:
             w.update(delta)
 
     def draw(self):
-        self.draw_bg(self.context.screen)
+        self.draw_background(self.context.screen)
         for w in self.widgets.values():
             w.draw(self.context.screen)
         pygame.display.flip()
 
-    def draw_bg(self, screen):
+    def draw_background(self, screen):
         self.context.screen.fill(Colors.white)
 
     def save(self, key, value):
