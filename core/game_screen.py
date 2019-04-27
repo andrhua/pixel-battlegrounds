@@ -67,6 +67,7 @@ class GameScreen(Screen):
                         TextLabel('(22, 48)', 0, 0, text_view_style)
                         )
         self.get_widget('cooldown_clock').enabled = False
+        self.get_widget('round_clock').enabled = False
 
     def update_user_token(self, delta):
         self.passed_time += delta
@@ -103,7 +104,7 @@ class GameScreen(Screen):
             self.next_draw = 60 * 60 * 1000
         self.update_user_token(delta)
         self.update_pointer()
-        self.update_round_clock()
+        # self.update_round_clock()
         if self.is_cooldown:
             self.update_cooldown_clock()
             self.next_draw -= delta

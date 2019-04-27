@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8571f87c-0094-4c87-b0ee-6dd3aff562d3" name="Default" comment="fixed constants naming in accordance to python conventions">
-      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/andrhua.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/core/inputlistener.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="8571f87c-0094-4c87-b0ee-6dd3aff562d3" name="Default" comment="changed colors names in accordance with python conventions">
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/andrhua.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/andrhua.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/game_screen.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/game_screen.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/core/login_screen.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/login_screen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/pixelbattlegroundsgame.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/pixelbattlegroundsgame.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/screens.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/screens.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/colors.py" beforeDir="false" afterPath="$PROJECT_DIR$/resources/colors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/load.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/resources/loader.jpg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/button.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/button.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/styles.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/styles.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/textlabel.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/textlabel.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/widget.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui/widget.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util/async_task.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/async_task.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util/settings.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -27,23 +19,28 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/core/login_screen.py">
+        <entry file="file://$PROJECT_DIR$/ui/styles.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="317">
-              <caret line="24" lean-forward="true" selection-start-line="24" selection-end-line="24" />
-              <folding>
-                <element signature="e#0#13#0" expanded="true" />
-                <element signature="e#1351#2497#0" />
-              </folding>
+            <state relative-caret-position="504">
+              <caret line="24" column="37" selection-start-line="24" selection-start-column="37" selection-end-line="24" selection-end-column="37" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/resources/assets.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="315">
+              <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ui/button.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="164">
-              <caret line="73" column="73" selection-start-line="73" selection-start-column="73" selection-end-line="73" selection-end-column="73" />
+            <state relative-caret-position="263">
+              <caret line="70" column="54" lean-forward="true" selection-start-line="70" selection-start-column="54" selection-end-line="70" selection-end-column="54" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -60,11 +57,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/core/game_screen.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="231">
-              <caret line="119" column="110" selection-start-line="119" selection-start-column="110" selection-end-line="119" selection-end-column="110" />
+            <state relative-caret-position="-4525">
+              <caret line="14" selection-start-line="14" selection-end-line="14" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -73,15 +70,22 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/core/inputlistener.py">
-          <provider selected="true" editor-type-id="text-editor" />
+        <entry file="file://$PROJECT_DIR$/core/login_screen.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-592">
+              <caret line="126" column="30" lean-forward="true" selection-start-line="126" selection-start-column="30" selection-end-line="126" selection-end-column="30" />
+              <folding>
+                <element signature="e#0#13#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/resources/colors.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="189">
-              <caret line="9" column="36" selection-start-line="9" selection-start-column="36" selection-end-line="9" selection-end-column="36" />
+            <state relative-caret-position="231">
+              <caret line="11" column="6" lean-forward="true" selection-start-line="11" selection-start-column="6" selection-end-line="11" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -96,22 +100,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/core/screens.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="924">
-              <caret line="44" lean-forward="true" selection-start-line="44" selection-end-line="44" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ui/widget.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="183">
-              <caret line="41" column="50" selection-start-line="41" selection-start-column="50" selection-end-line="41" selection-end-column="50" />
+            <state relative-caret-position="756">
+              <caret line="40" column="73" lean-forward="true" selection-start-line="40" selection-start-column="73" selection-end-line="40" selection-end-column="73" />
             </state>
           </provider>
         </entry>
@@ -119,8 +111,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ui/textlabel.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-105">
-              <caret line="10" column="8" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
+            <state relative-caret-position="206">
+              <caret line="23" column="52" selection-start-line="23" selection-start-column="52" selection-end-line="23" selection-end-column="52" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -161,6 +153,7 @@
       <find>widgets</find>
       <find>Settings.screen_width</find>
       <find>Settings.screen_height</find>
+      <find>bg_color</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$</dir>
@@ -203,25 +196,25 @@
         <option value="$PROJECT_DIR$/ui/ui.py" />
         <option value="$PROJECT_DIR$/ui/label.py" />
         <option value="$PROJECT_DIR$/ui/textform.py" />
-        <option value="$PROJECT_DIR$/ui/textlabel.py" />
-        <option value="$PROJECT_DIR$/ui/styles.py" />
         <option value="$PROJECT_DIR$/ui/sprite_image.py" />
         <option value="$PROJECT_DIR$/ui/color_picker.py" />
         <option value="$PROJECT_DIR$/core/manager.py" />
         <option value="$PROJECT_DIR$/game.py" />
-        <option value="$PROJECT_DIR$/resources/assets.py" />
         <option value="$PROJECT_DIR$/launch.py" />
         <option value="$PROJECT_DIR$/util/async_task.py" />
-        <option value="$PROJECT_DIR$/ui/widget.py" />
         <option value="$PROJECT_DIR$/util/settings.py" />
-        <option value="$PROJECT_DIR$/core/login_screen.py" />
         <option value="$PROJECT_DIR$/core/screens.py" />
-        <option value="$PROJECT_DIR$/ui/button.py" />
-        <option value="$PROJECT_DIR$/resources/colors.py" />
         <option value="$PROJECT_DIR$/core/pixelbattlegroundsgame.py" />
         <option value="$PROJECT_DIR$/core/InputListener.py" />
         <option value="$PROJECT_DIR$/util/constants.py" />
+        <option value="$PROJECT_DIR$/resources/colors.py" />
+        <option value="$PROJECT_DIR$/resources/assets.py" />
+        <option value="$PROJECT_DIR$/ui/widget.py" />
+        <option value="$PROJECT_DIR$/ui/styles.py" />
+        <option value="$PROJECT_DIR$/core/login_screen.py" />
         <option value="$PROJECT_DIR$/core/game_screen.py" />
+        <option value="$PROJECT_DIR$/ui/textlabel.py" />
+        <option value="$PROJECT_DIR$/ui/button.py" />
       </list>
     </option>
   </component>
@@ -564,7 +557,7 @@
       <updated>1508577927398</updated>
       <workItem from="1556308330877" duration="1417000" />
       <workItem from="1556309776122" duration="8761000" />
-      <workItem from="1556359231255" duration="18660000" />
+      <workItem from="1556359231255" duration="20212000" />
     </task>
     <task id="LOCAL-00001" summary="splitting fat modules">
       <created>1556317542700</created>
@@ -601,11 +594,25 @@
       <option name="project" value="LOCAL" />
       <updated>1556376708339</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="removed settings file">
+      <created>1556382284026</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1556382284026</updated>
+    </task>
+    <task id="LOCAL-00007" summary="changed colors names in accordance with python conventions">
+      <created>1556382395054</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1556382395054</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="28838000" />
+    <option name="totallyTimeSpent" value="30390000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-2" y="28" width="1924" height="1054" extended-state="6" />
@@ -644,10 +651,12 @@
     <MESSAGE value="change widgets access" />
     <MESSAGE value="fixed game grid scaling" />
     <MESSAGE value="fixed constants naming in accordance to python conventions" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed constants naming in accordance to python conventions" />
+    <MESSAGE value="removed settings file" />
+    <MESSAGE value="changed colors names in accordance with python conventions" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed colors names in accordance with python conventions" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/pubg$launch.coverage" NAME="launch Coverage Results" MODIFIED="1556382160267" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pubg$launch.coverage" NAME="launch Coverage Results" MODIFIED="1556383713085" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/camera.py" />
@@ -694,20 +703,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ui/styles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="17" column="15" selection-start-line="17" selection-start-column="15" selection-end-line="17" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/resources/assets.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/util/settings.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="84">
@@ -719,41 +714,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
           <caret line="12" column="37" selection-start-line="12" selection-start-column="37" selection-end-line="12" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/core/login_screen.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="317">
-          <caret line="24" lean-forward="true" selection-start-line="24" selection-end-line="24" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-            <element signature="e#1351#2497#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/resources/colors.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
-          <caret line="9" column="36" selection-start-line="9" selection-start-column="36" selection-end-line="9" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ui/textlabel.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-105">
-          <caret line="10" column="8" selection-start-line="10" selection-start-column="8" selection-end-line="10" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ui/widget.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="183">
-          <caret line="41" column="50" selection-start-line="41" selection-start-column="50" selection-end-line="41" selection-end-column="50" />
         </state>
       </provider>
     </entry>
@@ -777,16 +737,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ui/button.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="164">
-          <caret line="73" column="73" selection-start-line="73" selection-start-column="73" selection-end-line="73" selection-end-column="73" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/util/constants.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="42">
@@ -794,12 +744,70 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/core/game_screen.py">
+    <entry file="file://$PROJECT_DIR$/resources/assets.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/resources/colors.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="231">
-          <caret line="119" column="110" selection-start-line="119" selection-start-column="110" selection-end-line="119" selection-end-column="110" />
+          <caret line="11" column="6" lean-forward="true" selection-start-line="11" selection-start-column="6" selection-end-line="11" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/styles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="504">
+          <caret line="24" column="37" selection-start-line="24" selection-start-column="37" selection-end-line="24" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/widget.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="756">
+          <caret line="40" column="73" lean-forward="true" selection-start-line="40" selection-start-column="73" selection-end-line="40" selection-end-column="73" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/login_screen.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-592">
+          <caret line="126" column="30" lean-forward="true" selection-start-line="126" selection-start-column="30" selection-end-line="126" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/core/game_screen.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-4525">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/textlabel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="206">
+          <caret line="23" column="52" selection-start-line="23" selection-start-column="52" selection-end-line="23" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/button.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="263">
+          <caret line="70" column="54" lean-forward="true" selection-start-line="70" selection-start-column="54" selection-end-line="70" selection-end-column="54" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>
