@@ -50,7 +50,7 @@ class Screen:
         pygame.display.flip()
 
     def draw_background(self, screen):
-        self.context.screen.fill(Colors.white)
+        self.context.screen.fill(Colors.WHITE)
 
     def save(self, key, value):
         self.context.data[key] = value

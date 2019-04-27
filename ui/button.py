@@ -66,8 +66,8 @@ class ColorPicker(Widget):
         self.buttons = []
         self.selected = -1
         style = ButtonStyle(None)
-        for i, color in enumerate(Colors.game_colors):
-            number_of_colors = len(Colors.game_colors)
+        for i, color in enumerate(Colors.GAME_COLORS):
+            number_of_colors = len(Colors.GAME_COLORS)
             style.background_color = color
             self.buttons.append(Button((Constants.COLOR_BUTTON_SIZE, Constants.COLOR_BUTTON_SIZE),
                                        ((i + 1) * Constants.SCREEN_WIDTH / (number_of_colors + 1) - Constants.COLOR_BUTTON_SIZE / 2,

@@ -77,7 +77,7 @@ class TextForm(TextLabel):
         if len(self.editable_text) > 0:
             self.canvas = self.style.font.render(
                 self.editable_text if not self.is_protected else self.get_hidden_str(),
-                True, self.style.text_color if self.is_editable else Colors.transparent_grey, self.style.bg_color)
+                True, self.style.text_color if self.is_editable else Colors.SEMITRANSPARENT_GREY, self.style.bg_color)
             self.update_dest(self.editable_text if not self.is_protected else self.get_hidden_str())
         else:
             self.canvas = self.style.font.render(self.text, True, self.style.hint_color, self.style.bg_color)
@@ -86,8 +86,8 @@ class TextForm(TextLabel):
             x = self.style.font.size(
                 (self.editable_text if not self.is_protected else self.get_hidden_str())[:self.index])
             x = x[0] + (-1 if self.index > 0 else 1) * Constants.LINE_WIDTH
-            pygame.draw.line(self.canvas, Colors.black, (x, 0), (x, self.height), Constants.LINE_WIDTH)
-        pygame.draw.line(self.canvas, Colors.black, (0, self.height - 3 * Constants.LINE_WIDTH),
+            pygame.draw.line(self.canvas, Colors.BLACK, (x, 0), (x, self.height), Constants.LINE_WIDTH)
+        pygame.draw.line(self.canvas, Colors.BLACK, (0, self.height - 3 * Constants.LINE_WIDTH),
                          (self.canvas.get_width(), self.height - 3 * Constants.LINE_WIDTH),
                          Constants.LINE_WIDTH)
 

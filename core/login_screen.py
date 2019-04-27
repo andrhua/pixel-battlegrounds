@@ -84,7 +84,7 @@ class LoginScreen(Screen):
     def init_battleground(self):
         def get_default_color():
             from random import choice
-            return {'color': choice(Colors.game_colors)}
+            return {'color': choice(Colors.GAME_COLORS)}
 
         pixels = {}
         for i in range(0, Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT):
@@ -93,10 +93,10 @@ class LoginScreen(Screen):
         self.context.firebase.database().child('pixels').set(pixels, self.get_token())
 
     def init_widgets(self):
-        style_regular = TextLabelStyle(Assets.font_regular, Colors.black, None, Align.center)
-        style_logo = TextLabelStyle(Assets.font_logo, Colors.black, None, Align.center)
-        style_status = TextLabelStyle(Assets.font_small, Colors.grey, None, Align.center)
-        style_edit_text = TextFormStyle(Assets.font_regular, Colors.black, Colors.grey, Colors.white, Align.center)
+        style_regular = TextLabelStyle(Assets.font_regular, Colors.BLACK, None, Align.center)
+        style_logo = TextLabelStyle(Assets.font_logo, Colors.BLACK, None, Align.center)
+        style_status = TextLabelStyle(Assets.font_small, Colors.GREY, None, Align.center)
+        style_edit_text = TextFormStyle(Assets.font_regular, Colors.BLACK, Colors.GREY, Colors.WHITE, Align.center)
         size = Assets.font_logo.size(LoginScreen.APP_NAME)
         self.add_widget('app_label', TextLabel(LoginScreen.APP_NAME,
                                                (Constants.SCREEN_WIDTH / 2 - size[0] / 2,

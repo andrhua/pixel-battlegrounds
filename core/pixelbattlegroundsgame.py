@@ -34,7 +34,7 @@ class PixelBattlegroundsGame:
         screen = pygame.display.set_mode()  # (Settings.screen_width, Settings.screen_height))
         Constants(pygame.display.Info())
         pygame.display.set_caption('Pixel Battlegrounds')
-        screen.fill(Colors.messy_white)
+        screen.fill(Colors.ALMOST_WHITE)
         self.clock = pygame.time.Clock()
         self.context = Context(self, screen, self.firebase, self.auth)
         self.set_screen('login')
