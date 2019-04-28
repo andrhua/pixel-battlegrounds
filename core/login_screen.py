@@ -30,7 +30,6 @@ class LoginScreen(Screen):
             token = self.context.get_local_user_token()
             info = self.context.auth.get_account_info(token)
             if info['users'][0]['emailVerified']:
-                # self.init_battleground()
                 self.context.game.set_game_screen()
                 self.save_credentials(email, password)
             else:

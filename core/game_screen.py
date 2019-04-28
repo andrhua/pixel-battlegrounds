@@ -77,6 +77,7 @@ class GameScreen(Screen):
         self.update_user_token(delta)
         self.update_pointer()
         # self.update_round_clock()
+        self.player.update(delta)
         super().update(delta)
 
     def draw_background(self, screen):
@@ -124,8 +125,8 @@ class GameScreen(Screen):
             x = int(self.last_down_position[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
             y = int(self.last_down_position[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
             if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
-                self.set_cooldown(True)
                 self.player.conquer_pixel(x, y, Colors.GAME_COLORS[self.color_picker.selected_color])
+                self.set_cooldown(True)
 
     def on_mouse_drag(self, delta_x, delta_y):
         self.move_camera(delta_x, delta_y)
@@ -142,8 +143,8 @@ class GameScreen(Screen):
         self.camera.__setattr__('y', self.camera_y)
 
     def check_fill(self):
-        x, y = pygame.mouse.get_pos()
         if self.color_picker.selected_color != -1:
+            x, y = pygame.mouse.get_pos()
             if y <= Constants.SCREEN_HEIGHT - Constants.COLOR_PICKER_HEIGHT:
                 self.target.gone = False
                 x = int(x * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
@@ -165,6 +166,8 @@ class GameScreen(Screen):
         self.camera.__setattr__('y', self.camera_y)
 
     def set_cooldown(self, value):
+        if value:
+            self.color_picker.reset_selection()
         self.get_widget('cooldown_clock').enabled = value
         self.color_picker.enabled = not value
 

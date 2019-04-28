@@ -1,3 +1,5 @@
+# TODO: write actual i18n module
+
 EMAIL_HINT = 'email'
 PASSWORD_HINT = 'password'
 VERIFICATION_SENT = "Verify your email via letter we've just sent and sign in."

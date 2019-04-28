@@ -101,3 +101,9 @@ class ColorPicker(Widget):
         pygame.draw.rect(self.surface, self.background_color, Rect(0, 0, self.width, self.height))
         for button in self.buttons:
             button.draw(self.surface)
+
+    def reset_selection(self):
+        self.buttons[self.selected_color].pressed = False
+        self.selected_color = -1
+        self.update_surface()
+

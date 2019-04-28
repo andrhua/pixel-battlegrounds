@@ -23,7 +23,6 @@ class Session:
         self.pixels_db.set(self.token)
 
     def conquer_pixel(self, x, y, new_color, token):
-        self.game_screen.set_cooldown(True)
         self.pixels_db.child(str(x + y * Constants.BATTLEGROUND_WIDTH)).update({util.constants.DB_COLOR: new_color}, token)
 
     def update_pixel(self, pixel):
