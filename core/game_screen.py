@@ -69,8 +69,8 @@ class GameScreen(Screen):
         self.add_widget('location',
                         TextLabel('', Constants.SCREEN_WIDTH / 2, helper_label_height / 2,
                                   label_style,
-                                  helper_label_width, helper_label_height)
-                        )
+                                  helper_label_width * 1.1, helper_label_height
+                                  ))
         # self.add_widget('round_clock',
         #                 TextLabel('00:00', Constants.SCREEN_WIDTH / 2, 0, text_view_style,
         #                           helper_label_width, helper_label_height))
@@ -99,8 +99,8 @@ class GameScreen(Screen):
     def update_pointer(self):
         x, y = pygame.mouse.get_pos()
         x = int(x * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
-        y = Constants.BATTLEGROUND_HEIGHT - int(y * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
-        self.get_widget('location').set_text(f'({x},{y})')
+        y = Constants.BATTLEGROUND_HEIGHT - int(y * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y) - 1
+        self.get_widget('location').set_text(f'{x},{y}')
 
     def update(self, delta):
         if (delta > 1000 or delta < 0) and self.next_draw > 0:

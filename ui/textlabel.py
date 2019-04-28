@@ -37,6 +37,7 @@ class TextLabel(Widget):
 
     def set_text(self, text):
         self.text = text
+        # self.update_size()
         self.update_position(text)
         self.update_canvas()
 
