@@ -3,6 +3,8 @@ from resources.colors import Colors
 from ui.widget import Battleground
 from util.constants import Constants
 from util.decorators import threaded
+from random import randint, choice, random
+from time import sleep
 
 
 class Session:
@@ -32,28 +34,41 @@ class Session:
         self.battleground.set_pixel(x, y, pixel['data'][util.constants.DB_COLOR])
 
 
-class Player:
-    def __init__(self, firebase_user, session, cooldown_timer, last_logout_timestamp):
-        self.user = firebase_user
-        self.session = session
+class Conqueror:
+    def __init__(self):
         self.is_cooldown = False
-        # restore cooldown from previous session if necessary
-        if cooldown_timer is not None:
-            import time
-            self.cooldown_time = max(cooldown_timer - (time.time() - last_logout_timestamp), 0)
-        else:
-            self.cooldown_time = 0
+        self.cooldown_time = 0
 
     def set_cooldown(self, value):
         self.is_cooldown = value
         if value and self.cooldown_time <= 0:
-            self.cooldown_time = 5 * 1000
+            self.cooldown_time = Constants.COOLDOWN
+
+    def update(self, delta):
+        pass
+
+    def conquer(self, x, y, new_color):
+        self.set_cooldown(True)
+
+
+class Player(Conqueror):
+    def __init__(self, firebase_user, session, cooldown_timer, last_logout_timestamp):
+        super().__init__()
+        self.user = firebase_user
+        self.session = session
+        # restore cooldown from previous session if necessary
+        if cooldown_timer is not None:
+            import time
+            self.cooldown_time = max(cooldown_timer - (time.time() - last_logout_timestamp), 0)
+
+    def set_cooldown(self, value):
+        super().set_cooldown(value)
         self.session.game_screen.set_cooldown(value)
 
     def update(self, delta):
         if self.is_cooldown:
+            self.cooldown_time -= delta
             if self.cooldown_time > 0:
-                self.cooldown_time -= delta
                 self.session.game_screen.update_cooldown_clock(self.cooldown_time)
             else:
                 self.is_cooldown = False
@@ -61,8 +76,30 @@ class Player:
 
     @threaded
     def conquer_pixel(self, x, y, new_color):
-        self.set_cooldown(True)
+        super().conquer(x, y, new_color)
         self.session.conquer_pixel(x, y, new_color, self.get_token())
 
     def get_token(self):
         return self.user[util.constants.DB_TOKEN]
+
+
+class Bot(Conqueror):
+    def __init__(self, session):
+        super().__init__()
+        self.battleground = session.battleground
+
+    def update(self, delta):
+        if self.is_cooldown:
+            self.cooldown_time -= delta
+            if self.cooldown_time <= 0:
+                self.is_cooldown = False
+        else:
+            self.conquer(0, 0, None)
+
+    def conquer(self, x, y, new_color):
+        super().conquer(x, y, new_color)
+        self.battleground.set_pixel(
+            randint(0, Constants.BATTLEGROUND_WIDTH - 1),
+            randint(0, Constants.BATTLEGROUND_HEIGHT - 1),
+            Colors.GAME_COLORS[0]# choice(Colors.GAME_COLORS)
+        )

@@ -5,7 +5,7 @@ import util.constants
 from pygame import Rect
 
 from core.screen import Screen
-from core.game import Session, Player
+from core.game import Session, Player, Bot
 from resources.assets import Assets
 from resources.colors import Colors
 from ui.button import ColorPicker
@@ -34,7 +34,13 @@ class GameScreen(Screen):
         self.battleground = self.session.battleground.get_surface()
         if self.player.cooldown_time > 0:
             self.set_cooldown(True)
-        print('lock')
+        self.bots = self.add_bots()
+
+    def add_bots(self, num=20):
+        bots = []
+        for i in range(num):
+            bots.append(Bot(self.session))
+        return bots
 
     def init_ui(self):
         self.add_widget('color_picker', ColorPicker(Colors.SEMITRANSPARENT_BLACK))
@@ -51,6 +57,7 @@ class GameScreen(Screen):
                                   label_style,
                                   helper_label_width * 1.1, helper_label_height
                                   ))
+        self.get_widget('location').enabled = False
         # self.add_widget('round_clock',
         #                 TextLabel('00:00', Constants.SCREEN_WIDTH / 2, 0, text_view_style,
         #                           helper_label_width, helper_label_height))
@@ -77,6 +84,8 @@ class GameScreen(Screen):
         self.update_pointer()
         # self.update_round_clock()
         self.player.update(delta)
+        for bot in self.bots:
+            bot.update(delta)
         super().update(delta)
 
     def draw_background(self, screen):
