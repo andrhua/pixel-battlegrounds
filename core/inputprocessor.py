@@ -25,6 +25,7 @@ class InputProcessor:
         if self.is_lmb_held:
             x, y = pygame.mouse.get_pos()
             self.on_mouse_drag(self.last_down_position[0] - x, self.last_down_position[1] - y)
+            self.last_down_position = (x, y)
 
     def on_key_down(self, key, unicode):
         pass
