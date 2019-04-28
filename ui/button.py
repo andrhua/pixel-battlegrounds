@@ -23,7 +23,7 @@ class Button(Widget):
 
     def draw(self, canvas):
         if self.pressed:
-            canvas.blit(self.canvas, (self.pressed_width, self.pressed_height), self.pressed_rect)
+            canvas.blit(self.canvas, (self.x + self.width / 2 - self.pressed_width / 2, self.y + self.height / 2 - self.pressed_height / 2), self.pressed_rect)
         else:
             canvas.blit(self.canvas, (self.x, self.y))
 
@@ -35,7 +35,7 @@ class TextButton(Button):
     def __init__(self, text, width, height, style):
         self.text = text
         text_width, text_height = style.font.size(text)
-        super().__init__((text_width + 10, text_height + 2), width, height, style)
+        super().__init__(text_width + 10, text_height + 2, width, height, style)
         self.update_dest(self.text)
 
     def update_dest(self, text):
