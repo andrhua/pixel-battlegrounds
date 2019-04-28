@@ -100,7 +100,7 @@ class GameScreen(Screen):
         x, y = pygame.mouse.get_pos()
         x = int(x * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
         y = Constants.BATTLEGROUND_HEIGHT - int(y * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
-        self.get_widget('location').set_text('({}, {})'.format(x, y))
+        self.get_widget('location').set_text(f'({x},{y})')
 
     def update(self, delta):
         if (delta > 1000 or delta < 0) and self.next_draw > 0:
