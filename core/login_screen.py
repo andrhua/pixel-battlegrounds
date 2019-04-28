@@ -1,13 +1,13 @@
 import pygame
 from requests import HTTPError
 
+from util.decorators import threaded
 from resources.assets import Assets
 from resources.colors import Colors
 from core.screens import Screen
 from ui.styles import TextLabelStyle, Align, TextFormStyle
 from ui.textlabel import TextLabel, TextForm
 from ui.widget import SpriteImage
-from util.async_task import AsyncTask
 from util.constants import Constants
 
 
@@ -26,15 +26,14 @@ class LoginScreen(Screen):
     def __init__(self, context):
         super().__init__(context)
         self.active_form = None
-        self.login_task = None
         email, password = self.load(self.EMAIL), self.load(self.PASS)
         if email is not None:
             self.context.last_exit = self.load(self.LAST_EXIT)
             # self.get_widget('email_form').set_text = email
             # self.get_widget('password_form').set_text = password
-            self.login_task = AsyncTask(self.login, email, password)
-            self.login_task.execute()
+            self.login(email, password)
 
+    @threaded
     def login(self, email, password):
         def handle_exception(e):
             def update_login_feedback(text):
@@ -76,10 +75,9 @@ class LoginScreen(Screen):
         self.get_widget('loader').enabled = True
         try:
             self.context.user = self.context.auth.sign_in_with_email_and_password(email, password)
+            check_verification()
         except HTTPError as e:
             handle_exception(e.strerror)
-        else:
-            check_verification()
 
     def init_battleground(self):
         def get_default_color():
@@ -156,8 +154,7 @@ class LoginScreen(Screen):
                         email, password = self.get_widget('email_form'), self.get_widget('password_form')
                         email.is_editable = False
                         email.is_editable = False
-                        self.login_task = AsyncTask(self.login, email.get_text(), password.get_text())
-                        self.login_task.execute()
+                        self.login(email.get_text(), password.get_text())
                 else:
                     self.get_widget('login_feedback').enabled = False
                     self.get_widget(self.active_form).append_text(e.unicode)

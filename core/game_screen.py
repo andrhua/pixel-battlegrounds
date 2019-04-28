@@ -1,21 +1,21 @@
-import threading
+import asyncio
 import time
 
 import pygame
-
 from pygame import Rect
+
+from core.screens import Screen, Target
 from resources.assets import Assets
 from resources.colors import Colors
-from core.screens import Screen, Target
+from ui.button import ColorPicker
 from ui.styles import TextLabelStyle
 from ui.textlabel import TextLabel
-from ui.button import ColorPicker
 from util.constants import Constants
 
 
 class GameScreen(Screen):
     PIXELS = 'pixels'
-    SERVICE = 'service'
+    SERVICE = 'service' 'requests'
     COLOR = 'color'
     NEXT_DRAW = 'next_draw'
 
@@ -23,7 +23,7 @@ class GameScreen(Screen):
         super().__init__(context)
         self.color_picker = self.get_widget('color_picker')
         self.db = self.context.firebase.database()
-        self.pixels_stream = self.db.child(self.PIXELS).stream(self.receive_pixel, self.get_token())
+        self.new_pixels_stream = self.db.child(self.PIXELS).stream(self.update_pixel, self.get_token())
         self.canvas = pygame.Surface(
             [Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT]).convert_alpha()
         self.canvas.fill(Colors.ALMOST_WHITE)
@@ -36,7 +36,7 @@ class GameScreen(Screen):
         self.count = 0
         self.passed_time = 0
         self.down_coords = (-1, -1)
-        self.prev_coords = (-1, -1)
+        self.prev_pressed_pointer = (-1, -1)
         nd = self.load(self.NEXT_DRAW)
 
         if nd is not None:
@@ -45,13 +45,17 @@ class GameScreen(Screen):
             self.next_draw = 0
         if self.next_draw > 0:
             self.set_waiting_mode(0)
-        self.end_of_round = int(self.db.child(self.SERVICE).child('time').get(self.get_token()).val())
+        # self.end_of_round = int(self.db.child(self.SERVICE).child('time').get(self.get_token()).val())
         self.suggestion = None
         self.target = Target()
         self.pixels_queue = []
-        self.send_thread = threading.Thread(target=self.send_pixel, daemon=True)
-        self.send_thread.start()
         self.load_battlegrounds()
+
+    def load_battlegrounds(self):
+        pixels = self.db.child(self.PIXELS).get(self.get_token()).val()
+        for j in range(0, Constants.BATTLEGROUND_HEIGHT):
+            for i in range(0, Constants.BATTLEGROUND_WIDTH):
+                self.canvas.set_at((i, j), pixels[i + Constants.BATTLEGROUND_WIDTH * j][self.COLOR])
 
     def init_widgets(self):
         self.add_widget('color_picker', ColorPicker(Colors.SEMITRANSPARENT_BLACK))
@@ -88,10 +92,7 @@ class GameScreen(Screen):
         t = self.next_draw
         seconds = int((t / 1000) % 60)
         minutes = int((t / (1000 * 60)) % 60)
-        flag_1 = seconds < 10
-        flag_2 = minutes < 10
-        self.get_widget('cooldown_clock').set_text(
-            ('0' if flag_2 else '') + str(minutes) + ':' + ('0' if flag_1 else '') + str(seconds))
+        self.get_widget('cooldown_clock').set_text(f'{minutes:02}:{seconds:02}')
 
     def update_pointer(self):
         x, y = pygame.mouse.get_pos()
@@ -118,7 +119,7 @@ class GameScreen(Screen):
     def draw_background(self, screen):
         camera_canvas = pygame.Surface((self.camera.w, self.camera.h))
         camera_canvas.fill(Colors.ALMOST_WHITE)
-        camera_canvas.blit(self.canvas, (0, 0), Rect(self.camera_x, self.camera_y, self.camera.w, self.camera.h))
+        camera_canvas.blit(self.canvas, (0, 0), Rect(self.camera.x, self.camera.y, self.camera.w, self.camera.h))
         camera_canvas = pygame.transform.scale(camera_canvas, (Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
         screen.blit(camera_canvas, (0, 0))
 
@@ -143,7 +144,7 @@ class GameScreen(Screen):
             if e.button == 1:
                 self.is_lmb_held = True
                 self.down_coords = pygame.mouse.get_pos()
-                self.prev_coords = self.down_coords
+                self.prev_pressed_pointer = self.down_coords
             if e.button == 4:  # zoom in
                 offset_x = -self.camera.w * Constants.SCROLL_STEP
                 offset_y = -self.camera.h * Constants.SCROLL_STEP
@@ -169,7 +170,7 @@ class GameScreen(Screen):
                 if flag[0]:
                     break
             if not flag[0] and self.color_picker.selected != -1:
-                self.conquer_pixel()
+                asyncio.run(self.conquer_pixel())
             self.color_picker.selected = flag[2] if flag[0] and flag[1] == 'palette' else -1
         if self.is_lmb_held:
             self.move_field()
@@ -201,11 +202,11 @@ class GameScreen(Screen):
 
     def move_field(self):
         pos = pygame.mouse.get_pos()
-        self.camera_x += (self.prev_coords[0] - pos[0]) * (self.camera.w / Constants.SCREEN_WIDTH)
-        self.camera_y += (self.prev_coords[1] - pos[1]) * (self.camera.h / Constants.SCREEN_HEIGHT)
+        self.camera_x += (self.prev_pressed_pointer[0] - pos[0]) * (self.camera.w / Constants.SCREEN_WIDTH)
+        self.camera_y += (self.prev_pressed_pointer[1] - pos[1]) * (self.camera.h / Constants.SCREEN_HEIGHT)
         self.camera.__setattr__('x', self.camera_x)
         self.camera.__setattr__('y', self.camera_y)
-        self.prev_coords = pos
+        self.prev_pressed_pointer = pos
 
     def set_waiting_mode(self, code):
         if code == 1:
@@ -214,39 +215,24 @@ class GameScreen(Screen):
         self.get_widget('cooldown_clock').enabled = True
         self.is_cooldown = True
 
-    def conquer_pixel(self):
-        if self.prev_coords[1] <= 9 * Constants.SCREEN_HEIGHT / 10:
-            x = int(self.prev_coords[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
-            y = int(self.prev_coords[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
+    async def conquer_pixel(self):
+        if self.prev_pressed_pointer[1] <= Constants.SCREEN_HEIGHT - Constants.COLOR_PICKER_HEIGHT:
+            x = int(self.prev_pressed_pointer[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
+            y = int(self.prev_pressed_pointer[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
             if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
                 self.set_waiting_mode(1)
-                colors = Colors.GAME_COLORS[self.color_picker.selected]
-                self.pixels_queue.append(((x, y), colors))
-
-    def send_pixel(self):
-        while 1:
-            if self.pixels_queue.__len__() != 0:
-                pixel = self.pixels_queue.pop(0)
-                dest = pixel[0]
-                colors = pixel[1]
-                self.db.child(self.PIXELS).child(str(dest[0] + dest[1] * Constants.BATTLEGROUND_WIDTH)).update(
+                self.db.child(self.PIXELS).child(str(x + y * Constants.BATTLEGROUND_WIDTH)).update(
                     {
-                        self.COLOR: colors
+                        self.COLOR: Colors.GAME_COLORS[self.color_picker.selected]
                     }, self.get_token())
 
-    def receive_pixel(self, pixel):
+    def update_pixel(self, pixel):
         self.count += 1
         if self.count > 1:
             number = int(pixel['path'][1:])
             x = number % Constants.BATTLEGROUND_WIDTH
             y = int((number - x) / Constants.BATTLEGROUND_WIDTH)
             self.canvas.set_at((x, y), pixel['data'][self.COLOR])
-
-    def load_battlegrounds(self):
-        pixels = self.db.child(self.PIXELS).get(self.get_token()).val()
-        for j in range(0, Constants.BATTLEGROUND_HEIGHT):
-            for i in range(0, Constants.BATTLEGROUND_WIDTH):
-                self.canvas.set_at((i, j), pixels[i + Constants.BATTLEGROUND_WIDTH * j][self.COLOR])
 
     def exit(self):
         self.save(self.NEXT_DRAW, self.next_draw)

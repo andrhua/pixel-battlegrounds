@@ -17,9 +17,7 @@ class PixelBattlegroundsGame:
             "apiKey": "AIzaSyCtCNdjjhu3YRmfABltpeJC2nq5OXTlgxc",
             "authDomain": "pixel-battlegrounds.firebaseapp.com",
             "databaseURL": "https://pixel-battlegrounds.firebaseio.com",
-            "projectId": "pixel-battlegrounds",
             "storageBucket": "pixel-battlegrounds.appspot.com",
-            "messagingSenderId": "704655328627"
         }
         self.firebase = pyrebase.initialize_app(config)
         self.auth = self.firebase.auth()
@@ -35,15 +33,15 @@ class PixelBattlegroundsGame:
         Constants(pygame.display.Info())
         pygame.display.set_caption('Pixel Battlegrounds')
         screen.fill(Colors.ALMOST_WHITE)
-        self.clock = pygame.time.Clock()
         self.context = Context(self, screen, self.firebase, self.auth)
         self.set_screen('login')
 
     def run(self):
+        clock = pygame.time.Clock()
         while 1:
             for e in pygame.event.get():
                 self.screen.process_input_events(e)
-            self.screen.update(self.clock.tick_busy_loop())
+            self.screen.update(clock.tick_busy_loop())
             self.screen.draw()
 
     def set_screen(self, screen_name):
