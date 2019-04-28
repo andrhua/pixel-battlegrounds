@@ -4,9 +4,8 @@ import pygame
 import util.constants
 from pygame import Rect
 
-from core.player import Player
-from core.screens import Screen, Target
-from core.session import Session
+from core.screen import Screen
+from core.game import Session, Player
 from resources.assets import Assets
 from resources.colors import Colors
 from ui.button import ColorPicker
@@ -175,3 +174,26 @@ class GameScreen(Screen):
         self.save(util.constants.LOCAL_SAVE_COOLDOWN_TIME, self.player.cooldown_time)
         self.save(util.constants.LOCAL_SAVE_LAST_LOGOUT_TIMESTAMP, time.time())
         super().exit()
+
+
+class Target:
+    def __init__(self):
+        self.dest = (-1, -1)
+        self.target_color = (0, 0, 0, 255)
+        self.curr_color = (0, 0, 0)
+        self.prev_dest = None
+        self.prev_color = None
+        self.different = False
+        self.gone = False
+
+    def commit(self, dest, target_color, curr_color):
+        if self.dest[0] != dest[0] or self.dest[1] != dest[1]:
+            self.prev_dest = self.dest
+            self.prev_color = self.curr_color
+            self.dest = dest
+            self.target_color = target_color
+            self.curr_color = curr_color
+            self.different = True
+
+    def __str__(self):
+        return self.dest, self.target_color, self.curr_color

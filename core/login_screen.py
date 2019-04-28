@@ -1,15 +1,13 @@
-import pygame
 from requests import HTTPError
 
 import util.constants
-import i18n
+from resources import i18n
 
-from core.game_screen import GameScreen
-from core.screens import Screen
+from core.screen import Screen
 from resources.assets import Assets
 from resources.colors import Colors
 from ui.styles import TextLabelStyle, Align, TextFormStyle
-from ui.textlabel import TextLabel, TextForm
+from ui.textlabel import TextLabel
 from ui.widget import SpriteImage
 from util.constants import Constants
 from util.decorators import threaded
