@@ -16,16 +16,16 @@ class Button(Widget):
         self.style = style
         self.pressed = False
         self.pressed_rect = Rect(0, 0, self.pressed_width, self.pressed_height)
-        self.update_canvas()
+        self.update_surface()
 
-    def update_canvas(self):
-        pygame.draw.rect(self.canvas, self.style.background_color, Rect(0, 0, self.width, self.height))
+    def update_surface(self):
+        pygame.draw.rect(self.surface, self.style.background_color, Rect(0, 0, self.width, self.height))
 
-    def draw(self, canvas):
+    def draw(self, surface):
         if self.pressed:
-            canvas.blit(self.canvas, (self.x + self.width / 2 - self.pressed_width / 2, self.y + self.height / 2 - self.pressed_height / 2), self.pressed_rect)
+            surface.blit(self.surface, (self.x + self.width / 2 - self.pressed_width / 2, self.y + self.height / 2 - self.pressed_height / 2), self.pressed_rect)
         else:
-            canvas.blit(self.canvas, (self.x, self.y))
+            surface.blit(self.surface, (self.x, self.y))
 
     def on_hit(self, *args):
         self.pressed = not self.pressed
@@ -48,15 +48,15 @@ class TextButton(Button):
             left = self.x + self.width - text_height
         self.x, self.y = left, self.y - self.height / 2
 
-    def draw(self, canvas):
-        canvas.blit(self.canvas, (self.x, self.y))
+    def draw(self, surface):
+        surface.blit(self.surface, (self.x, self.y))
 
-    def update_canvas(self):
-        super().update_canvas()
-        pygame.draw.rect(self.canvas, self.style.bg_color, Rect(1, 1, self.width - 2, self.height - 2))
+    def update_surface(self):
+        super().update_surface()
+        pygame.draw.rect(self.surface, self.style.bg_color, Rect(1, 1, self.width - 2, self.height - 2))
         text_width, text_height = self.style.font.size(self.text)
-        self.canvas.blit(self.style.font.render(self.text, True, self.style.text_color, self.style.bg_color),
-                         (self.width / 2 - text_width / 2, self.height / 2 - text_height / 2))
+        self.surface.blit(self.style.font.render(self.text, True, self.style.text_color, self.style.bg_color),
+                          (self.width / 2 - text_width / 2, self.height / 2 - text_height / 2))
 
 
 class ColorPicker(Widget):
@@ -65,7 +65,7 @@ class ColorPicker(Widget):
                          0, Constants.SCREEN_HEIGHT - Constants.COLOR_PICKER_HEIGHT)
         self.background_color = background_color
         self.buttons = []
-        self.selected = -1
+        self.selected_color = -1
         style = ButtonStyle(None)
         for i, color in enumerate(Colors.GAME_COLORS):
             number_of_colors = len(Colors.GAME_COLORS)
@@ -75,31 +75,29 @@ class ColorPicker(Widget):
                                                number_of_colors + 1) - Constants.COLOR_BUTTON_SIZE / 2,
                                        Constants.COLOR_PICKER_HEIGHT / 3 - Constants.COLOR_BUTTON_SIZE / 2,
                                        style))
-        self.update_canvas()
+        self.update_surface()
 
-    def draw(self, canvas):
+    def draw(self, surface):
         if self.enabled:
-            canvas.blit(self.canvas, (self.x, self.y))
+            surface.blit(self.surface, (self.x, self.y))
 
     def hit(self, x, y):
         if self.enabled:
-            i = 0
-            k = 21
-            k_flag = False
-            for button in self.buttons:
+            for i, button in enumerate(self.buttons):
                 if button.hit(x, y - self.y)[0] and button.pressed:
-                    k = i
-                    k_flag = True
-                else:
-                    button.pressed = False
-                i += 1
-            self.update_canvas()
-            return k_flag, 'palette', k
-        return False, 'palette', -1
+                    if self.selected_color != -1:
+                        self.buttons[self.selected_color].pressed = False
+                    self.selected_color = i
+                    self.buttons[i].pressed = True
+                    self.update_surface()
+                    return True, 'palette'
+            if self.hitbox.collidepoint(x, y):
+                return True, 'palette'
+        return False, 'palette'
 
-    def update_canvas(self, *args):
-        self.canvas.fill((0, 0, 0))
-        self.canvas.convert_alpha()
-        pygame.draw.rect(self.canvas, self.background_color, Rect(0, 0, self.width, self.height))
+    def update_surface(self, *args):
+        self.surface.fill((0, 0, 0))
+        self.surface.convert_alpha()
+        pygame.draw.rect(self.surface, self.background_color, Rect(0, 0, self.width, self.height))
         for button in self.buttons:
-            button.draw(self.canvas)
+            button.draw(self.surface)

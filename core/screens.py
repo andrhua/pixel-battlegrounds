@@ -1,25 +1,22 @@
-import math
 import shelve
 import sys
 
 import pygame
 
+from core.inputprocessor import InputProcessor
 from resources.colors import Colors
-from util.constants import Constants as Consts
 
 
-class Screen:
+class Screen(InputProcessor):
     LAST_EXIT = 'last_exit'
-    TOKEN = 'idToken'
 
     def __init__(self, context):
+        super().__init__()
         self.context = context
+        self.surface = pygame.display.get_surface()
         self.widgets = {}
         self.init_ui()
         self.is_clicked = False
-        self.down_coords = (0, 0)
-        self.last_mouse_event = -1
-        self.last_mouse_pos = (-1, -1)
 
     def init_ui(self):
         pass
@@ -30,36 +27,29 @@ class Screen:
     def get_widget(self, name):
         return self.widgets[name]
 
-    def process_input_events(self, e):
-        pass
-
-    def check_click(self, e):
-        pos = pygame.mouse.get_pos()
-        self.is_clicked = e.type == pygame.MOUSEBUTTONUP and \
-                          e.button == 1 and math.fabs(self.down_coords[0] - pos[0]) <= Consts.CLICK_DEAD_ZONE and \
-                          math.fabs(self.down_coords[1] - pos[1]) <= Consts.CLICK_DEAD_ZONE
+    def process_input_event(self, e):
+        if e.type == pygame.QUIT:
+            self.exit()
+        super().process_input_event(e)
 
     def update(self, delta):
         for w in self.widgets.values():
             w.update(delta)
 
     def draw(self):
-        self.draw_background(self.context.screen)
+        self.draw_background(self.surface)
         for w in self.widgets.values():
-            w.draw(self.context.screen)
+            w.draw(self.surface)
         pygame.display.flip()
 
     def draw_background(self, screen):
-        self.context.screen.fill(Colors.WHITE)
+        self.surface.fill(Colors.WHITE)
 
     def save(self, key, value):
         self.context.data[key] = value
 
     def load(self, key):
         return self.context.data[key] if key in self.context.data else None
-
-    def get_token(self):
-        return self.context.user[self.TOKEN]
 
     def exit(self):
         self.context.data.close()
@@ -69,13 +59,15 @@ class Screen:
 
 
 class Context:
-    def __init__(self, game, screen, firebase, auth):
+    def __init__(self, game, firebase, auth):
         self.game = game
-        self.screen = screen
         self.firebase = firebase
         self.auth = auth
         self.user = None
         self.data = shelve.open('data/data')
+
+    def get_local_user_token(self):
+        return self.user['idToken']
 
 
 class Target:

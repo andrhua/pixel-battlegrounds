@@ -1,74 +1,41 @@
 import pygame
 from requests import HTTPError
 
-from util.decorators import threaded
+import util.constants
+import i18n
+
+from core.game_screen import GameScreen
+from core.screens import Screen
 from resources.assets import Assets
 from resources.colors import Colors
-from core.screens import Screen
 from ui.styles import TextLabelStyle, Align, TextFormStyle
 from ui.textlabel import TextLabel, TextForm
 from ui.widget import SpriteImage
 from util.constants import Constants
+from util.decorators import threaded
 
 
 class LoginScreen(Screen):
-    EMAIL = "email"
-    PASS = "pass"
-    VERIFICATION_SENT = "Verify your email via letter we've just sent and sign in."
-    WRONG_PASS = "Incorrect password."
-    WEAK_PASS = "Password must contain a minimum of 6 characters."
-    WRONG_EMAIL = "Incorrect email."
-    NOT_VERIFIED_EMAIL = "Please first verify your email. Check spam box if necessary."
-    APP_NAME = "Pixel Battlegrounds"
-    EMAIL_HINT = "email"
-    PASSWORD_HINT = "password"
-
     def __init__(self, context):
         super().__init__(context)
         self.active_form = None
-        email, password = self.load(self.EMAIL), self.load(self.PASS)
+        self.forms = [self.get_widget('email_form'), self.get_widget('password_form')]
+        email, password = self.load(util.constants.LOCAL_SAVE_EMAIL), self.load(util.constants.LOCAL_SAVE_PASSWORD)
         if email is not None:
-            self.context.last_exit = self.load(self.LAST_EXIT)
-            # self.get_widget('email_form').set_text = email
-            # self.get_widget('password_form').set_text = password
             self.login(email, password)
 
     @threaded
     def login(self, email, password):
-        def handle_exception(e):
-            def update_login_feedback(text):
-                self.get_widget('login_feedback').set_text(text)
-
-            # print(e)
-            if 'EMAIL_NOT_FOUND' in e:
-                try:
-                    self.context.user = self.context.auth.create_user_with_email_and_password(email, password)
-                except HTTPError:
-                    update_login_feedback(self.WEAK_PASS)
-                else:
-                    self.context.auth.send_email_verification(self.get_token())
-                    update_login_feedback(self.VERIFICATION_SENT)
-                    self.save(self.EMAIL, email)
-                    self.save(self.PASS, password)
-            if 'INVALID_PASSWORD' in e:
-                update_login_feedback(self.WRONG_PASS)
-            if 'INVALID_EMAIL' in e:
-                update_login_feedback(self.WRONG_EMAIL)
-            if 'EMAIL_NOT_VERIFIED' in e:
-                self.context.auth.send_email_verification(self.get_token())
-                update_login_feedback(self.NOT_VERIFIED_EMAIL)
-            self.get_widget('email_form').is_editable = True
-            self.get_widget('password_form').is_editable = True
-            self.get_widget('loader').enabled = False
-            self.get_widget('login_feedback').enabled = True
-
         def check_verification():
-            info = self.context.auth.get_account_info(self.get_token())
+            token = self.context.get_local_user_token()
+            info = self.context.auth.get_account_info(token)
             if info['users'][0]['emailVerified']:
                 # self.init_battleground()
-                self.context.game.set_screen('game')
+                self.context.game.set_game_screen()
+                self.save_credentials(email, password)
             else:
-                handle_exception('EMAIL_NOT_VERIFIED')
+                self.context.auth.send_email_verification(token)
+                self.update_login_feedback(i18n.VERIFICATION_SENT)
 
         self.get_widget('email_form').is_editable = False
         self.get_widget('password_form').is_editable = False
@@ -77,34 +44,50 @@ class LoginScreen(Screen):
             self.context.user = self.context.auth.sign_in_with_email_and_password(email, password)
             check_verification()
         except HTTPError as e:
-            handle_exception(e.strerror)
+            e = e.strerror
+            if 'EMAIL_NOT_FOUND' in e:
+                self.register(email, password)
+            if 'INVALID_PASSWORD' in e:
+                self.update_login_feedback(i18n.WRONG_PASSWORD)
+            if 'INVALID_EMAIL' in e:
+                self.update_login_feedback(i18n.WRONG_EMAIL)
 
-    def init_battleground(self):
-        def get_default_color():
-            from random import choice
-            return {'color': choice(Colors.GAME_COLORS)}
+    def register(self, email, password):
+        try:
+            self.context.user = self.context.auth.create_user_with_email_and_password(email, password)
+        except HTTPError:
+            self.update_login_feedback(i18n.WEAK_PASSWORD)
+        else:
+            self.context.auth.send_email_verification(self.context.get_local_user_token())
+            self.update_login_feedback(i18n.VERIFICATION_SENT)
+            self.save_credentials(email, password)
 
-        pixels = {}
-        for i in range(0, Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT):
-            pixels[str(i)] = get_default_color()
-        self.context.firebase.database().child('pixels').remove(self.get_token())
-        self.context.firebase.database().child('pixels').set(pixels, self.get_token())
+    def save_credentials(self, email, password):
+        self.save(util.constants.LOCAL_SAVE_EMAIL, email)
+        self.save(util.constants.LOCAL_SAVE_PASSWORD, password)
+
+    def update_login_feedback(self, text):
+        self.get_widget('login_feedback').set_text(text)
+        self.get_widget('email_form').is_editable = True
+        self.get_widget('password_form').is_editable = True
+        self.get_widget('loader').enabled = False
+        self.get_widget('login_feedback').enabled = True
 
     def init_ui(self):
         style_regular = TextLabelStyle(Assets.font_regular, Colors.BLACK, None, Align.center)
         style_logo = TextLabelStyle(Assets.font_logo, Colors.BLACK, None, Align.center)
         style_status = TextLabelStyle(Assets.font_small, Colors.GREY, None, Align.center)
         style_edit_text = TextFormStyle(Assets.font_regular, Colors.BLACK, Colors.GREY, Colors.WHITE, Align.center)
-        self.add_widget('app_label', TextLabel(LoginScreen.APP_NAME,
+        self.add_widget('app_label', TextLabel(i18n.APP_NAME,
                                                Constants.SCREEN_WIDTH / 2, .25 * Constants.SCREEN_HEIGHT,
                                                style_logo))
         self.add_widget('login', TextLabel('sign in / register',
                                            Constants.SCREEN_WIDTH / 2, .45 * Constants.SCREEN_HEIGHT,
                                            style_regular))
-        self.add_widget('email_form', TextForm(LoginScreen.EMAIL_HINT,
+        self.add_widget('email_form', TextForm(i18n.EMAIL_HINT,
                                                Constants.SCREEN_WIDTH / 2, .55 * Constants.SCREEN_HEIGHT,
                                                style_edit_text))
-        self.add_widget('password_form', TextForm(LoginScreen.PASSWORD_HINT,
+        self.add_widget('password_form', TextForm(i18n.PASSWORD_HINT,
                                                   Constants.SCREEN_WIDTH / 2, .65 * Constants.SCREEN_HEIGHT,
                                                   style_edit_text, True))
         self.add_widget('loader', SpriteImage(
@@ -126,48 +109,34 @@ class LoginScreen(Screen):
             self.active_form = other(self.active_form)
             self.get_active_form().hit(self.get_active_form().x, self.get_active_form().y)
 
-    def process_input_events(self, e):
+    def on_key_down(self, key, unicode):
         if self.active_form is not None:
-            if e.type == pygame.KEYDOWN:
-                if e.key == pygame.K_LEFT:
-                    self.get_active_form().move_cursor(-1)
-                elif e.key == pygame.K_RIGHT:
-                    self.get_active_form().move_cursor(1)
-                elif e.key == pygame.K_BACKSPACE:
-                    self.get_active_form().delete_symbol()
-                elif e.key == pygame.K_TAB:
-                    self.switch_active_form()
-                elif e.key == pygame.K_RETURN:
-                    if self.get_widget('password_form').get_text() == '':
-                        if self.active_form == 'email_form':
-                            self.switch_active_form()
-                    else:
-                        self.get_widget('login_feedback').enabled = True
-                        email, password = self.get_widget('email_form'), self.get_widget('password_form')
-                        email.is_editable = False
-                        email.is_editable = False
-                        self.login(email.get_text(), password.get_text())
+            form = self.get_active_form()
+            if key == pygame.K_LEFT:
+                form.move_cursor(-1)
+            elif key == pygame.K_RIGHT:
+                form.move_cursor(1)
+            elif key == pygame.K_BACKSPACE:
+                form.delete_symbol()
+            elif key == pygame.K_TAB:
+                self.switch_active_form()
+            elif key == pygame.K_RETURN:
+                if self.get_widget('password_form').get_text() == '':
+                    if self.active_form == 'email_form':
+                        self.switch_active_form()
                 else:
-                    self.get_widget('login_feedback').enabled = False
-                    self.get_widget(self.active_form).append_text(e.unicode)
-        if e.type == pygame.QUIT:
-            self.exit()
-        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-            self.down_coords = pygame.mouse.get_pos()
-        self.check_click(e)
-        if self.is_clicked:
-            x, y = pygame.mouse.get_pos()
-            for name, w in self.widgets.items():
-                is_hit, widget = w.hit(x, y)
-                if is_hit:
-                    if widget == 'edit':
-                        self.active_form = name
-                        # if self.active_form == 2:
-                        #     self.widgets[''].lose_focus()
-                    else:
-                        self.unfocus_form()
-                    return
-            self.unfocus_form()
+                    self.get_widget('login_feedback').enabled = True
+                    email, password = self.get_widget('email_form'), self.get_widget('password_form')
+                    email.is_editable = False
+                    email.is_editable = False
+                    self.login(email.get_text(), password.get_text())
+            else:
+                form.append_text(unicode)
 
-    def unfocus_form(self):
-        self.active_form = None
+    def on_mouse_click(self):
+        x, y = pygame.mouse.get_pos()
+        for name, w in self.widgets.items():
+            is_hit, widget = w.hit(x, y)
+            if is_hit:
+                self.active_form = name if widget == 'edit' else None
+                return

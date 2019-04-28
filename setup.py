@@ -8,5 +8,5 @@ setup(
     license='',
     author='kekonyanus',
     author_email='',
-    description='Defend the land!', requires=['pygame']
+    description='Defend the land!', requires=['pygame', 'requests']
 )

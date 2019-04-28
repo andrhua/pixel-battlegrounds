@@ -19,8 +19,8 @@ class PixelBattlegroundsGame:
             "databaseURL": "https://pixel-battlegrounds.firebaseio.com",
             "storageBucket": "pixel-battlegrounds.appspot.com",
         }
-        self.firebase = pyrebase.initialize_app(config)
-        self.auth = self.firebase.auth()
+        firebase = pyrebase.initialize_app(config)
+        auth = firebase.auth()
 
         path = 'data'
         if not os.path.exists(path):
@@ -29,23 +29,23 @@ class PixelBattlegroundsGame:
         pygame.init()
         pygame.key.set_repeat(400, 50)
         Assets()
-        screen = pygame.display.set_mode()  # (Settings.screen_width, Settings.screen_height))
+        screen = pygame.display.set_mode()
         Constants(pygame.display.Info())
         pygame.display.set_caption('Pixel Battlegrounds')
         screen.fill(Colors.ALMOST_WHITE)
-        self.context = Context(self, screen, self.firebase, self.auth)
-        self.set_screen('login')
+        self.context = Context(self, firebase, auth)
+        self.set_login_screen()
 
     def run(self):
         clock = pygame.time.Clock()
         while 1:
             for e in pygame.event.get():
-                self.screen.process_input_events(e)
+                self.screen.process_input_event(e)
             self.screen.update(clock.tick_busy_loop())
             self.screen.draw()
 
-    def set_screen(self, screen_name):
-        if screen_name == 'login':
-            self.screen = LoginScreen(self.context)
-        elif screen_name == 'game':
-            self.screen = GameScreen(self.context)
+    def set_login_screen(self):
+        self.screen = LoginScreen(self.context)
+
+    def set_game_screen(self):
+        self.screen = GameScreen(self.context)

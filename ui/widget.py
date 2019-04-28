@@ -1,7 +1,9 @@
+import util.constants
 import pygame
 from pygame.rect import Rect
 from pygame.surface import Surface
 
+from resources.colors import Colors
 from util.constants import Constants
 
 
@@ -11,11 +13,11 @@ class Widget:
         self.height = int(height)
         self.x = x
         self.y = y
-        self.canvas = Surface([self.width, self.height]).convert_alpha()
+        self.surface = Surface([self.width, self.height]).convert_alpha()
         self.enabled = True
         self.hitbox = Rect(self.x, self.y, self.width, self.height)
 
-    def draw(self, canvas):
+    def draw(self, surface):
         pass
 
     def hit(self, x, y):
@@ -29,7 +31,7 @@ class Widget:
     def update(self, delta):
         pass
 
-    def update_canvas(self):
+    def update_surface(self):
         pass
 
     def on_hit(self, *args):
@@ -45,7 +47,7 @@ class SpriteImage(Widget):
         self.limit = 125
         self.enabled = False
         self.frame = Rect(0, 0, self.width, self.height)
-        self.dest = (self.x, self.y)
+        self.position = (self.x, self.y)
 
     def update(self, delta):
         if self.enabled:
@@ -55,6 +57,24 @@ class SpriteImage(Widget):
                 self.i = (self.i + 1) % 9
                 self.frame.__setattr__('x', self.i * Constants.FRAME_WIDTH)
 
-    def draw(self, canvas):
+    def draw(self, surface):
         if self.enabled:
-            canvas.blit(self.image, self.dest, self.frame)
+            surface.blit(self.image, self.position, self.frame)
+
+
+class Battleground:
+    def __init__(self, pixels):
+        self.surface = pygame.Surface([Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT]).convert_alpha()
+        self.surface.fill(Colors.ALMOST_WHITE)
+        for y in range(0, Constants.BATTLEGROUND_HEIGHT):
+            for x in range(0, Constants.BATTLEGROUND_WIDTH):
+                self.set_pixel(x, y, pixels[x + Constants.BATTLEGROUND_WIDTH * y][util.constants.DB_COLOR])
+
+    def get_surface(self):
+        return self.surface
+
+    def set_pixel(self, x, y, new_color):
+        self.surface.set_at((x, y), new_color)
+
+    def get_at(self, x, y):
+        return self.surface.get_at((x, y))
