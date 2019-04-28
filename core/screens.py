@@ -15,13 +15,13 @@ class Screen:
     def __init__(self, context):
         self.context = context
         self.widgets = {}
-        self.init_widgets()
+        self.init_ui()
         self.is_clicked = False
         self.down_coords = (0, 0)
         self.last_mouse_event = -1
         self.last_mouse_pos = (-1, -1)
 
-    def init_widgets(self):
+    def init_ui(self):
         pass
 
     def add_widget(self, name, widget):

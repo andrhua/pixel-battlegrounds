@@ -16,12 +16,12 @@ class TextLabel(Widget):
             super().__init__(width, height, x, y)
         self.text = text
         self.style = style
-        self.update_dest(text)
+        self.update_position(text)
         self.update_canvas()
 
     def draw(self, canvas):
         if self.enabled:
-            canvas.blit(self.canvas, (self.x, self.y))
+            canvas.blit(self.canvas, (self.x - self.width / 2, self.y - self.height / 2))
 
     def update_canvas(self):
         if self.style.background_color is not None:
@@ -37,10 +37,10 @@ class TextLabel(Widget):
 
     def set_text(self, text):
         self.text = text
-        self.update_dest(text)
+        self.update_position(text)
         self.update_canvas()
 
-    def update_dest(self, text):
+    def update_position(self, text):
         text_width, text_height = self.style.font.size(text)
         if self.style.align == Align.left:
             left = self.x
@@ -76,10 +76,10 @@ class TextForm(TextLabel):
             self.canvas = self.style.font.render(
                 self.editable_text if not self.is_protected else self.get_hidden_str(),
                 True, self.style.text_color if self.is_editable else Colors.SEMITRANSPARENT_GREY, self.style.background_color)
-            self.update_dest(self.editable_text if not self.is_protected else self.get_hidden_str())
+            self.update_position(self.editable_text if not self.is_protected else self.get_hidden_str())
         else:
             self.canvas = self.style.font.render(self.text, True, self.style.hint_color, self.style.background_color)
-            self.update_dest(self.text)
+            self.update_position(self.text)
         if self.has_focus and self.is_visible:
             x = self.style.font.size(
                 (self.editable_text if not self.is_protected else self.get_hidden_str())[:self.index])[0]

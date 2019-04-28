@@ -1,9 +1,9 @@
-import asyncio
 import time
 
 import pygame
 from pygame import Rect
 
+from util.decorators import threaded
 from core.screens import Screen, Target
 from resources.assets import Assets
 from resources.colors import Colors
@@ -57,21 +57,23 @@ class GameScreen(Screen):
             for i in range(0, Constants.BATTLEGROUND_WIDTH):
                 self.canvas.set_at((i, j), pixels[i + Constants.BATTLEGROUND_WIDTH * j][self.COLOR])
 
-    def init_widgets(self):
+    def init_ui(self):
         self.add_widget('color_picker', ColorPicker(Colors.SEMITRANSPARENT_BLACK))
-        text_view_style = TextLabelStyle(Assets.font_small, Colors.WHITE, Colors.SEMITRANSPARENT_BLACK)
-        self.add_widget('round_clock',
-                        TextLabel('20:18', Constants.SCREEN_WIDTH / 2, 0, text_view_style,
-                                  .05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT))
+        helper_label_width, helper_label_height = .055 * Constants.SCREEN_WIDTH, .045 * Constants.SCREEN_HEIGHT
+        label_style = TextLabelStyle(Assets.font_regular, Colors.WHITE, Colors.SEMITRANSPARENT_BLACK)
         self.add_widget('cooldown_clock',
-                        TextLabel('20:24', Constants.SCREEN_WIDTH / 2, 9 * Constants.SCREEN_HEIGHT / 10,
-                                  text_view_style,
-                                  .05 * Constants.SCREEN_WIDTH, .06 * Constants.SCREEN_HEIGHT))
-        self.add_widget('location',
-                        TextLabel('(22, 48)', 0, 0, text_view_style)
-                        )
+                        TextLabel('', Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT - .6 * Constants.COLOR_PICKER_HEIGHT,
+                                  label_style,
+                                  helper_label_width, helper_label_height))
         self.get_widget('cooldown_clock').enabled = False
-        self.get_widget('round_clock').enabled = False
+        self.add_widget('location',
+                        TextLabel('', Constants.SCREEN_WIDTH / 2, helper_label_height / 2,
+                                  label_style,
+                                  helper_label_width, helper_label_height)
+                        )
+        # self.add_widget('round_clock',
+        #                 TextLabel('00:00', Constants.SCREEN_WIDTH / 2, 0, text_view_style,
+        #                           helper_label_width, helper_label_height))
 
     def update_user_token(self, delta):
         self.passed_time += delta
@@ -170,7 +172,7 @@ class GameScreen(Screen):
                 if flag[0]:
                     break
             if not flag[0] and self.color_picker.selected != -1:
-                asyncio.run(self.conquer_pixel())
+                self.conquer_pixel()
             self.color_picker.selected = flag[2] if flag[0] and flag[1] == 'palette' else -1
         if self.is_lmb_held:
             self.move_field()
@@ -215,7 +217,8 @@ class GameScreen(Screen):
         self.get_widget('cooldown_clock').enabled = True
         self.is_cooldown = True
 
-    async def conquer_pixel(self):
+    @threaded
+    def conquer_pixel(self):
         if self.prev_pressed_pointer[1] <= Constants.SCREEN_HEIGHT - Constants.COLOR_PICKER_HEIGHT:
             x = int(self.prev_pressed_pointer[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
             y = int(self.prev_pressed_pointer[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
