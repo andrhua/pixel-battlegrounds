@@ -8,7 +8,7 @@ from util.constants import Constants
 
 
 class Button(Widget):
-    def __init__(self, width, height, x, y, style):
+    def __init__(self, width, height, x, y, style, run_on_hit, *args, **kwargs):
         super().__init__(width, height, x, y)
         self.pressed_width, self.pressed_height = int(self.width * .8), int(self.height * .8)
         self.pressed_x, self.pressed_y = self.x + (self.width / 2 - self.pressed_width / 2), self.y + (
@@ -16,6 +16,7 @@ class Button(Widget):
         self.style = style
         self.pressed = False
         self.pressed_rect = Rect(0, 0, self.pressed_width, self.pressed_height)
+        self.run_on_hit = run_on_hit
         self.update_surface()
 
     def update_surface(self):
@@ -29,13 +30,14 @@ class Button(Widget):
 
     def on_hit(self, *args):
         self.pressed = not self.pressed
+        self.run_on_hit()
 
 
 class TextButton(Button):
-    def __init__(self, text, width, height, style):
+    def __init__(self, text, x, y, style, run_on_hit, *args, **kwargs):
         self.text = text
         text_width, text_height = style.font.size(text)
-        super().__init__(text_width + 10, text_height + 2, width, height, style)
+        super().__init__(text_width * 1.1, text_height * 1.1, x, y, style, run_on_hit, args, kwargs)
         self.update_dest(self.text)
 
     def update_dest(self, text):
@@ -74,7 +76,15 @@ class ColorPicker(Widget):
                                        (i + 1) * Constants.SCREEN_WIDTH / (
                                                number_of_colors + 1) - Constants.COLOR_BUTTON_SIZE / 2,
                                        Constants.COLOR_PICKER_HEIGHT / 3 - Constants.COLOR_BUTTON_SIZE / 2,
-                                       style))
+                                       style,
+                                       self.activate_button, i))
+        self.update_surface()
+
+    def activate_button(self, i):
+        if self.selected_color != -1:
+            self.buttons[self.selected_color].pressed = False
+        self.selected_color = i
+        self.buttons[i].pressed = True
         self.update_surface()
 
     def draw(self, surface):
@@ -85,11 +95,7 @@ class ColorPicker(Widget):
         if self.enabled:
             for i, button in enumerate(self.buttons):
                 if button.hit(x, y - self.y)[0] and button.pressed:
-                    if self.selected_color != -1:
-                        self.buttons[self.selected_color].pressed = False
-                    self.selected_color = i
-                    self.buttons[i].pressed = True
-                    self.update_surface()
+                    self.activate_button(i)
                     return True, 'palette'
             if self.hitbox.collidepoint(x, y):
                 return True, 'palette'
@@ -106,4 +112,3 @@ class ColorPicker(Widget):
         self.buttons[self.selected_color].pressed = False
         self.selected_color = -1
         self.update_surface()
-

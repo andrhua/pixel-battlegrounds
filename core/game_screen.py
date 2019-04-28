@@ -8,8 +8,8 @@ from core.screen import Screen
 from core.game import Session, Player, Bot
 from resources.assets import Assets
 from resources.colors import Colors
-from ui.button import ColorPicker
-from ui.styles import TextLabelStyle
+from ui.button import ColorPicker, TextButton
+from ui.styles import TextLabelStyle, TextButtonStyle
 from ui.textlabel import TextLabel
 from util.constants import Constants
 
@@ -36,7 +36,7 @@ class GameScreen(Screen):
             self.set_cooldown(True)
         self.bots = self.add_bots()
 
-    def add_bots(self, num=20):
+    def add_bots(self, num=50):
         bots = []
         for i in range(num):
             bots.append(Bot(self.session))
@@ -46,18 +46,23 @@ class GameScreen(Screen):
         self.add_widget('color_picker', ColorPicker(Colors.SEMITRANSPARENT_BLACK))
         helper_label_width, helper_label_height = .055 * Constants.SCREEN_WIDTH, .045 * Constants.SCREEN_HEIGHT
         label_style = TextLabelStyle(Assets.font_regular, Colors.WHITE, Colors.SEMITRANSPARENT_BLACK)
-        self.add_widget('cooldown_clock',
-                        TextLabel('', Constants.SCREEN_WIDTH / 2,
-                                  Constants.SCREEN_HEIGHT - .6 * Constants.COLOR_PICKER_HEIGHT,
-                                  label_style,
-                                  helper_label_width, helper_label_height))
-        self.get_widget('cooldown_clock').enabled = False
         self.add_widget('location',
                         TextLabel('', Constants.SCREEN_WIDTH / 2, helper_label_height / 2,
                                   label_style,
                                   helper_label_width * 1.1, helper_label_height
                                   ))
+        self.add_widget('exit',
+                        TextButton('Exit', Constants.SCREEN_WIDTH, 0,
+                                   TextButtonStyle(Assets.font_small, Colors.WHITE, Colors.WHITE, Colors.BLACK))
+                        )
+        self.add_widget('cooldown_clock',
+                        TextLabel('', Constants.SCREEN_WIDTH / 2,
+                                  Constants.SCREEN_HEIGHT - .6 * Constants.COLOR_PICKER_HEIGHT,
+                                  label_style,
+                                  helper_label_width, helper_label_height))
+
         self.get_widget('location').enabled = False
+        self.get_widget('cooldown_clock').enabled = False
         # self.add_widget('round_clock',
         #                 TextLabel('00:00', Constants.SCREEN_WIDTH / 2, 0, text_view_style,
         #                           helper_label_width, helper_label_height))

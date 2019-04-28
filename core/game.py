@@ -101,5 +101,5 @@ class Bot(Conqueror):
         self.battleground.set_pixel(
             randint(0, Constants.BATTLEGROUND_WIDTH - 1),
             randint(0, Constants.BATTLEGROUND_HEIGHT - 1),
-            Colors.GAME_COLORS[0]# choice(Colors.GAME_COLORS)
+            Colors.GAME_COLORS[13]# choice(Colors.GAME_COLORS)
         )
