@@ -52,8 +52,9 @@ class GameScreen(Screen):
                                   helper_label_width * 1.1, helper_label_height
                                   ))
         self.add_widget('exit',
-                        TextButton('Exit', Constants.SCREEN_WIDTH, 0,
-                                   TextButtonStyle(Assets.font_small, Colors.WHITE, Colors.WHITE, Colors.BLACK))
+                        TextButton('Exit', 0, Constants.SCREEN_HEIGHT * .025,
+                                   TextButtonStyle(Assets.font_small, Colors.WHITE, Colors.WHITE, Colors.BLACK),
+                                   self.exit)
                         )
         self.add_widget('cooldown_clock',
                         TextLabel('', Constants.SCREEN_WIDTH / 2,
@@ -131,8 +132,9 @@ class GameScreen(Screen):
     def on_mouse_click(self):
         x, y = pygame.mouse.get_pos()
         for w in self.widgets.values():
-            hit_some_widget = w.hit(x, y)[0]
+            hit_some_widget, name = w.hit(x, y)
             if hit_some_widget:
+                print(name)
                 return
         if self.color_picker.selected_color != -1:
             x = int(self.last_down_position[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)

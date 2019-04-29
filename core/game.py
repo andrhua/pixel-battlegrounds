@@ -74,7 +74,7 @@ class Player(Conqueror):
                 self.is_cooldown = False
                 self.session.game_screen.set_cooldown(False)
 
-    @threaded
+    @threaded('conquer')
     def conquer_pixel(self, x, y, new_color):
         super().conquer(x, y, new_color)
         self.session.conquer_pixel(x, y, new_color, self.get_token())
@@ -101,5 +101,5 @@ class Bot(Conqueror):
         self.battleground.set_pixel(
             randint(0, Constants.BATTLEGROUND_WIDTH - 1),
             randint(0, Constants.BATTLEGROUND_HEIGHT - 1),
-            Colors.GAME_COLORS[13]# choice(Colors.GAME_COLORS)
+            Colors.GAME_COLORS[13]  # choice(Colors.GAME_COLORS)
         )

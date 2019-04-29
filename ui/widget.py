@@ -16,17 +16,25 @@ class Widget:
         self.surface = Surface([self.width, self.height]).convert_alpha()
         self.enabled = True
         self.hitbox = Rect(self.x, self.y, self.width, self.height)
+        self.children = []
+
+    def add_child(self, widget):
+        self.children.append(widget)
 
     def draw(self, surface):
         pass
 
     def hit(self, x, y):
         if self.enabled:
+            for child in self.children:
+                is_hit, name = child.hit(x, y)
+                if is_hit:
+                    return is_hit, name
             is_hit = self.hitbox.collidepoint(x, y)
             if is_hit:
                 self.on_hit()
-            return is_hit, 'widget'
-        return False, 'widget'
+            return is_hit, self.__repr__()
+        return False, self.__repr__()
 
     def update(self, delta):
         pass
@@ -36,6 +44,9 @@ class Widget:
 
     def on_hit(self, *args):
         pass
+
+    def __repr__(self):
+        return 'widget'
 
 
 class SpriteImage(Widget):

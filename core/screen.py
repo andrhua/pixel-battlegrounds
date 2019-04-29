@@ -118,6 +118,4 @@ class Screen(InputProcessor):
 
     def exit(self):
         self.context.data.close()
-        pygame.display.quit()
-        pygame.quit()
-        sys.exit(1)
+        self.context.game.quit()

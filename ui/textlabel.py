@@ -14,7 +14,6 @@ class TextLabel(Widget):
         super().__init__(width, height, x, y)
         self.text = text
         self.style = style
-        self.update_position(text)
         self.update_surface()
 
     def draw(self, surface):
@@ -37,7 +36,6 @@ class TextLabel(Widget):
     def set_text(self, text):
         self.text = text
         # self.update_size()
-        self.update_position(text)
         self.update_surface()
 
     def get_aligned_position(self, x, y, style, text):
@@ -49,17 +47,6 @@ class TextLabel(Widget):
         else:
             left = x + self.width - text_width
         return left, y
-
-    def update_position(self, text):
-        pass
-        # text_width, text_height = self.style.font.size(text)
-        # if self.style.align == Align.left:
-        #     left = self.x
-        # elif self.style.align == Align.center:
-        #     left = self.x + self.width / 2 - text_width / 2
-        # else:
-        #     left = self.x + self.width - text_width
-        # self.x = left
 
     def set_text_color(self, text_color):
         self.style.text_color = text_color
@@ -89,10 +76,10 @@ class TextForm(TextLabel):
                 self.editable_text if not self.is_protected else self.get_hidden_str(),
                 True, self.style.text_color if self.is_editable else Colors.SEMITRANSPARENT_GREY,
                 self.style.background_color)
-            self.update_position(self.editable_text)
+            # self.update_position(self.editable_text)
         else:
             self.surface = self.style.font.render(self.text, True, self.style.hint_color, self.style.background_color)
-            self.update_position(self.text)
+            # self.update_position(self.text)
         if self.has_focus and self.is_visible:
             x = self.style.font.size(self.editable_text[:self.index])[0]
             x = x + (-1 if self.index > 0 else 1) * Constants.LINE_WIDTH

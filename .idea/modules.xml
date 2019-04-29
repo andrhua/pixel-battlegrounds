@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/pixel-battlegrounds.iml" filepath="$PROJECT_DIR$/.idea/pixel-battlegrounds.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../pubg/.idea/pubg.iml" filepath="$PROJECT_DIR$/../pubg/.idea/pubg.iml" />
     </modules>
   </component>
 </project>

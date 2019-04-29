@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pygame
 import pyrebase
@@ -34,15 +35,24 @@ class PixelBattlegroundsGame:
         pygame.display.set_caption('Pixel Battlegrounds')
         screen.fill(Colors.ALMOST_WHITE)
         self.context = Context(self, firebase, auth)
+        self.stop = False
         self.set_login_screen()
 
     def run(self):
         clock = pygame.time.Clock()
-        while 1:
+        while not self.stop:
             for e in pygame.event.get():
                 self.screen.process_input_event(e)
             self.screen.update(clock.tick_busy_loop())
             self.screen.draw()
+        # import threading
+        # print('\n'.join(map(lambda t: t.name, threading.enumerate())))
+        pygame.display.quit()
+        pygame.quit()
+        sys.exit()
+
+    def quit(self):
+        self.stop = True
 
     def set_login_screen(self):
         self.screen = LoginScreen(self.context)

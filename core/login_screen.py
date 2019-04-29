@@ -23,13 +23,13 @@ class LoginScreen(Screen):
         # if email is not None:
         #     self.login(email, password)
 
-    @threaded
+    @threaded('login_anon')
     def login_anonymously(self):
         self.get_widget('loader').enabled = True
         self.context.user = self.context.auth.sign_in_anonymous()
         self.context.game.set_game_screen()
 
-    @threaded
+    @threaded('login_with_email_and_password')
     def login(self, email, password):
         def check_verification():
             token = self.context.get_local_user_token()
