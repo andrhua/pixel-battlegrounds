@@ -8,9 +8,9 @@ DB_PIXELS = 'pixels'
 
 
 class Constants:
-    COOLDOWN = 5
-    BATTLEGROUND_WIDTH = 100
-    BATTLEGROUND_HEIGHT = 100
+    COOLDOWN = 10 * 1000
+    BATTLEGROUND_WIDTH = 500
+    BATTLEGROUND_HEIGHT = 500
     ZOOM_STEP = 0.1
     UPSCALE_BOUND = 30
     DOWNSCALE_BOUND = int(2.5 * BATTLEGROUND_WIDTH)
@@ -24,14 +24,15 @@ class Constants:
     PRESSED_COLOR_WIDTH = 10
     FRAME_WIDTH = 64
     CLICK_DEAD_ZONE = 0
-    SCREEN_WIDTH = 0
-    SCREEN_HEIGHT = 0
+    SCREEN_WIDTH = 1280
+    SCREEN_HEIGHT = 720
     COLOR_PICKER_HEIGHT = 0
+    NOTIFICATION_TIMEOUT = 4 * 1000
 
     def __init__(self, display_info):
-        Constants.SCREEN_WIDTH = display_info.current_w
-        Constants.SCREEN_HEIGHT = display_info.current_h
+        # Constants.SCREEN_WIDTH = display_info.current_w
+        # Constants.SCREEN_HEIGHT = display_info.current_h
         Constants.CLICK_DEAD_ZONE = display_info.current_w / 200
         Constants.COLOR_BUTTON_SIZE = Constants.SCREEN_HEIGHT * .06
-        Constants.COLOR_PICKER_HEIGHT = Constants.SCREEN_HEIGHT * .15
+        Constants.COLOR_PICKER_HEIGHT = Constants.SCREEN_HEIGHT * .1
 

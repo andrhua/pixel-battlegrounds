@@ -2,15 +2,16 @@ import time
 
 import pygame
 import util.constants
+import resources.i18n
 from pygame import Rect
 
 from core.screen import Screen
-from core.game import Session, Player, Bot
+from core.game import Session, Player, Bot, ImageProject
 from resources.assets import Assets
 from resources.colors import Colors
 from ui.button import ColorPicker, TextButton
-from ui.styles import TextLabelStyle, TextButtonStyle
-from ui.textlabel import TextLabel
+from ui.styles import TextLabelStyle, TextButtonStyle, Align
+from ui.textlabel import TextLabel, Notification
 from util.constants import Constants
 
 
@@ -27,43 +28,48 @@ class GameScreen(Screen):
         self.passed_time = 0
         self.projection = None
         self.target = Target()
-        self.session = Session(self, self.context.firebase.database().child('pixels'),
+        self.session = Session(self, self.context.firebase.database().child(util.constants.DB_PIXELS),
                                self.context.get_local_user_token())
         self.player = Player(self.context.user, self.session, self.load(util.constants.LOCAL_SAVE_COOLDOWN_TIME),
                              self.load(util.constants.LOCAL_SAVE_LAST_LOGOUT_TIMESTAMP))
         self.battleground = self.session.battleground.get_surface()
-        if self.player.cooldown_time > 0:
+        if self.player.cooldown_timer > 0:
             self.set_cooldown(True)
-        self.bots = self.add_bots()
+        # self.bots = self.add_bots()
+        self.bots_flag = False
 
-    def add_bots(self, num=50):
+    def add_bots(self, num=1000):
+        project = ImageProject()
         bots = []
         for i in range(num):
-            bots.append(Bot(self.session))
+            bots.append(Bot(self.session, project))
         return bots
 
     def init_ui(self):
         self.add_widget('color_picker', ColorPicker(Colors.SEMITRANSPARENT_BLACK))
-        helper_label_width, helper_label_height = .055 * Constants.SCREEN_WIDTH, .045 * Constants.SCREEN_HEIGHT
-        label_style = TextLabelStyle(Assets.font_regular, Colors.WHITE, Colors.SEMITRANSPARENT_BLACK)
-        self.add_widget('location',
-                        TextLabel('', Constants.SCREEN_WIDTH / 2, helper_label_height / 2,
-                                  label_style,
-                                  helper_label_width * 1.1, helper_label_height
-                                  ))
+        label_style = TextLabelStyle(Assets.font_small, Colors.WHITE, Colors.SEMITRANSPARENT_BLACK, Align.left)
+        button_style = TextButtonStyle(Assets.font_small, Colors.WHITE, Colors.WHITE, Colors.BLACK)
         self.add_widget('exit',
-                        TextButton('Exit', 0, Constants.SCREEN_HEIGHT * .025,
-                                   TextButtonStyle(Assets.font_small, Colors.WHITE, Colors.WHITE, Colors.BLACK),
+                        TextButton('Exit', 0, 0,
+                                   button_style,
                                    self.exit)
                         )
-        self.add_widget('cooldown_clock',
-                        TextLabel('', Constants.SCREEN_WIDTH / 2,
-                                  Constants.SCREEN_HEIGHT - .6 * Constants.COLOR_PICKER_HEIGHT,
+        self.add_widget('location',
+                        TextLabel('aaa,bbb', 0, Constants.SCREEN_HEIGHT - Constants.COLOR_PICKER_HEIGHT - self.get_widget('exit').height,
                                   label_style,
-                                  helper_label_width, helper_label_height))
-
-        self.get_widget('location').enabled = False
+                                  ))
+        self.add_widget('save',
+                        TextButton('Save', 0, self.get_widget('exit').height,
+                                   button_style,
+                                   self.save_battleground_to_image))
+        label_style.align = Align.center
+        self.add_widget('cooldown_clock',
+                        TextLabel('00:00', Constants.SCREEN_WIDTH / 2,
+                                  Constants.SCREEN_HEIGHT - .6 * Constants.COLOR_PICKER_HEIGHT,
+                                  label_style).center())
         self.get_widget('cooldown_clock').enabled = False
+        self.add_widget('notification',
+                        Notification(Constants.SCREEN_WIDTH / 2, self.get_widget('location').y, label_style).center())
         # self.add_widget('round_clock',
         #                 TextLabel('00:00', Constants.SCREEN_WIDTH / 2, 0, text_view_style,
         #                           helper_label_width, helper_label_height))
@@ -90,8 +96,12 @@ class GameScreen(Screen):
         self.update_pointer()
         # self.update_round_clock()
         self.player.update(delta)
-        for bot in self.bots:
-            bot.update(delta)
+        if self.bots_flag:
+            for bot in self.bots:
+                if bot.project.completed:
+                    self.bots_flag = False
+                    break
+                bot.update(delta)
         super().update(delta)
 
     def draw_background(self, screen):
@@ -134,13 +144,12 @@ class GameScreen(Screen):
         for w in self.widgets.values():
             hit_some_widget, name = w.hit(x, y)
             if hit_some_widget:
-                print(name)
                 return
         if self.color_picker.selected_color != -1:
             x = int(self.last_down_position[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
             y = int(self.last_down_position[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
             if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
-                self.player.conquer_pixel(x, y, Colors.GAME_COLORS[self.color_picker.selected_color])
+                self.player.conquer_pixel(x, y, Colors.GAME_PALETTE[self.color_picker.selected_color])
                 self.set_cooldown(True)
 
     def on_mouse_drag(self, delta_x, delta_y):
@@ -165,7 +174,7 @@ class GameScreen(Screen):
                 x = int(x * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
                 y = int(y * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
                 if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
-                    self.target.commit((x, y), Colors.GAME_COLORS[self.color_picker.selected_color],
+                    self.target.commit((x, y), Colors.GAME_PALETTE[self.color_picker.selected_color],
                                        self.session.battleground.get_at(x, y))
                 else:
                     self.target.gone = True
@@ -186,10 +195,33 @@ class GameScreen(Screen):
         self.get_widget('cooldown_clock').enabled = value
         self.color_picker.enabled = not value
 
+    def notify(self, message):
+        self.get_widget('notification').notify(message)
+
     def exit(self):
-        self.save(util.constants.LOCAL_SAVE_COOLDOWN_TIME, self.player.cooldown_time)
+        self.save(util.constants.LOCAL_SAVE_COOLDOWN_TIME, self.player.cooldown_timer)
         self.save(util.constants.LOCAL_SAVE_LAST_LOGOUT_TIMESTAMP, time.time())
         super().exit()
+
+    def on_key_down(self, key, unicode):
+        if unicode == 's':
+            self.save_battleground_to_image()
+        elif unicode == 'n':
+            self.create_new_project()
+        elif unicode == 'b':
+            self.launch_bots()
+
+    def save_battleground_to_image(self):
+        pygame.image.save(self.battleground, 'battle.png')
+        self.notify(resources.i18n.CANVAS_SAVED)
+
+    def create_new_project(self):
+        project = ImageProject()
+        for bot in self.bots:
+            bot.project = project
+
+    def launch_bots(self):
+        self.bots_flag = True
 
 
 class Target:

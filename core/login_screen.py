@@ -1,3 +1,4 @@
+import pygame
 from requests import HTTPError
 
 import util.constants
@@ -7,7 +8,7 @@ from core.screen import Screen
 from resources.assets import Assets
 from resources.colors import Colors
 from ui.styles import TextLabelStyle, Align, TextFormStyle
-from ui.textlabel import TextLabel
+from ui.textlabel import TextLabel, TextForm
 from ui.widget import SpriteImage
 from util.constants import Constants
 from util.decorators import threaded
@@ -35,8 +36,8 @@ class LoginScreen(Screen):
             token = self.context.get_local_user_token()
             info = self.context.auth.get_account_info(token)
             if info['users'][0]['emailVerified']:
-                self.context.game.set_game_screen()
                 self.save_credentials(email, password)
+                self.context.game.set_game_screen()
             else:
                 self.context.auth.send_email_verification(token)
                 self.update_login_feedback(i18n.VERIFICATION_SENT)
@@ -83,8 +84,8 @@ class LoginScreen(Screen):
         style_status = TextLabelStyle(Assets.font_small, Colors.GREY, None, Align.center)
         style_edit_text = TextFormStyle(Assets.font_regular, Colors.BLACK, Colors.GREY, Colors.WHITE, Align.center)
         self.add_widget('app_label', TextLabel(i18n.APP_NAME,
-                                               Constants.SCREEN_WIDTH / 2, .5 * Constants.SCREEN_HEIGHT,
-                                               style_logo))
+                                               Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT / 2,
+                                               style_logo).center())
         # self.add_widget('login', TextLabel('sign in / register',
         #                                    Constants.SCREEN_WIDTH / 2, .45 * Constants.SCREEN_HEIGHT,
         #                                    style_regular))

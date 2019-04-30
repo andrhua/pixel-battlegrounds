@@ -30,7 +30,7 @@ class PixelBattlegroundsGame:
         pygame.init()
         pygame.key.set_repeat(400, 50)
         Assets()
-        screen = pygame.display.set_mode()
+        screen = pygame.display.set_mode((Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
         Constants(pygame.display.Info())
         pygame.display.set_caption('Pixel Battlegrounds')
         screen.fill(Colors.ALMOST_WHITE)

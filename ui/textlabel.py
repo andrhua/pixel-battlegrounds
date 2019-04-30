@@ -8,25 +8,44 @@ from util.constants import Constants
 
 
 class TextLabel(Widget):
-    def __init__(self, text, x, y, style, width=None, height=None):
-        if width is None:
-            width, height = style.font.size(text)
-        super().__init__(width, height, x, y)
+    def __init__(self, text, x, y, style):
         self.text = text
         self.style = style
+        self.text_x, self.text_y = 0, 0
+        self.text_width, self.text_height = style.font.size(text)
+        super().__init__(*self.get_width_and_height(), x, y)
+        self.update_text_position()
+        self.update_surface()
+
+    def get_width_and_height(self):
+        return self.text_width + (self.text_width / len(self.text) * 2 if self.style.background_color is not None else 0), \
+               self.text_height + (self.text_height if self.style.background_color is not None else 0)
+
+    def update_rectangle_position(self, dx, dy):
+        if self.style.align == Align.left:
+            pass
+        elif self.style.align == Align.center:
+            self.x -= dx / 2
+            self.y -= dy / 2
+        elif self.style.align == Align.right:
+            self.x -= dx
+            self.y -= dy
+
+    def update_text_position(self):
+        self.text_x = self.width / 2 - self.text_width / 2
+        self.text_y = self.height / 2 - self.text_height / 2
         self.update_surface()
 
     def draw(self, surface):
         if self.enabled:
-            x, y = self.get_aligned_position(self.x, self.y, self.style, self.text)
-            surface.blit(self.surface, (self.x - self.width / 2, self.y - self.height / 2))
+            surface.blit(self.surface, (self.x, self.y))
 
     def update_surface(self):
         if self.style.background_color is not None:
+            self.surface = pygame.Surface([self.width, self.height]).convert_alpha()
             pygame.draw.rect(self.surface, self.style.background_color, Rect(0, 0, self.width, self.height))
-            text_width, text_height = self.style.font.size(self.text)
             self.surface.blit(self.style.font.render(self.text, True, self.style.text_color, None),
-                              (self.width / 2 - text_width / 2, self.height / 2 - text_height / 2))
+                              (self.text_x, self.text_y))
         else:
             self.surface = self.style.font.render(self.text, True, self.style.text_color, None)
 
@@ -35,18 +54,12 @@ class TextLabel(Widget):
 
     def set_text(self, text):
         self.text = text
-        # self.update_size()
+        old_width, old_height = self.width, self.height
+        self.text_width, self.text_height = self.style.font.size(text)
+        self.width, self.height = self.get_width_and_height()
+        self.update_rectangle_position(self.width - old_width, self.height - old_height)
+        self.update_text_position()
         self.update_surface()
-
-    def get_aligned_position(self, x, y, style, text):
-        text_width, text_height = style.font.size(text)
-        if style.align == Align.left:
-            left = x
-        elif style.align == Align.center:
-            left = x + self.width / 2 - text_width / 2
-        else:
-            left = x + self.width - text_width
-        return left, y
 
     def set_text_color(self, text_color):
         self.style.text_color = text_color
@@ -54,6 +67,29 @@ class TextLabel(Widget):
 
     def get_text(self):
         return self.text.strip()
+
+    def center(self):
+        self.x -= self.width / 2
+        # self.y -= self.height / 2
+        return self
+
+
+class Notification(TextLabel):
+    def __init__(self, x, y, style):
+        super().__init__('pizza', x, y, style)
+        self.enabled = False
+        self.timeout = 0
+
+    def notify(self, message):
+        self.set_text(message)
+        self.enabled = True
+        self.timeout = Constants.NOTIFICATION_TIMEOUT
+
+    def update(self, delta):
+        if self.enabled:
+            self.timeout -= delta
+            if self.timeout <= 0:
+                self.enabled = False
 
 
 class TextForm(TextLabel):
@@ -76,10 +112,8 @@ class TextForm(TextLabel):
                 self.editable_text if not self.is_protected else self.get_hidden_str(),
                 True, self.style.text_color if self.is_editable else Colors.SEMITRANSPARENT_GREY,
                 self.style.background_color)
-            # self.update_position(self.editable_text)
         else:
             self.surface = self.style.font.render(self.text, True, self.style.hint_color, self.style.background_color)
-            # self.update_position(self.text)
         if self.has_focus and self.is_visible:
             x = self.style.font.size(self.editable_text[:self.index])[0]
             x = x + (-1 if self.index > 0 else 1) * Constants.LINE_WIDTH

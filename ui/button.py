@@ -25,10 +25,11 @@ class Button(Widget):
         pygame.draw.rect(self.surface, self.style.background_color, Rect(0, 0, self.width, self.height))
 
     def draw(self, surface):
-        surface.blit(self.surface, (
-            self.x + (self.width / 2 - self.pressed_width / 2 if self.pressed else 0),
-            self.y + (self.height / 2 - self.pressed_height / 2 if self.pressed else 0),
-        ))
+        if self.enabled:
+            surface.blit(self.surface, (
+                self.x + (self.width / 2 - self.pressed_width / 2 if self.pressed else 0),
+                self.y + (self.height / 2 - self.pressed_height / 2 if self.pressed else 0),
+            ))
 
     def on_hit(self):
         self.pressed = not self.pressed
@@ -40,7 +41,8 @@ class TextButton(Button):
         self.text = text
         self.text_x, self.text_y = 0, 0
         self.text_width, self.text_height = style.font.size(text)
-        super().__init__(self.text_width * 1.75, self.text_height * 1.5, x, y, style, run_on_hit, *args, **kwargs)
+        super().__init__(self.text_width + self.text_width / len(text) * 2,
+                         self.text_height + self.text_height, x, y, style, run_on_hit, *args, **kwargs)
         self.update_text_position()
 
     def set_text(self, text):
@@ -49,6 +51,8 @@ class TextButton(Button):
         self.text_width, self.text_height = self.style.font.size(text)
         self.width, self.height = self.text_width * 1.75, self.text_height * 1.5
         self.update_rectangle_position(self.width - old_width, self.height - old_height)
+        self.update_text_position()
+        self.update_surface()
 
     def update_rectangle_position(self, dx, dy):
         if self.style.align == Align.left:
@@ -59,7 +63,6 @@ class TextButton(Button):
         elif self.style.align == Align.right:
             self.x -= dx
             self.y -= dy
-        self.update_text_position()
 
     def update_text_position(self):
         self.text_x = self.width / 2 - self.text_width / 2
@@ -67,7 +70,8 @@ class TextButton(Button):
         self.update_surface()
 
     def draw(self, surface):
-        surface.blit(self.surface, (self.x, self.y))
+        if self.enabled:
+            surface.blit(self.surface, (self.x, self.y))
 
     def update_surface(self):
         super().update_surface()
@@ -83,13 +87,12 @@ class ColorPicker(Widget):
         self.background_color = background_color
         self.selected_color = -1
         style = ButtonStyle(None)
-        for i, color in enumerate(Colors.GAME_COLORS):
-            number_of_colors = len(Colors.GAME_COLORS)
+        for i, color in enumerate(Colors.GAME_PALETTE):
+            number_of_colors = len(Colors.GAME_PALETTE)
             style.background_color = color
             self.add_child(Button(Constants.COLOR_BUTTON_SIZE, Constants.COLOR_BUTTON_SIZE,
-                                  (i + 1) * Constants.SCREEN_WIDTH / (
-                                              number_of_colors + 1) - Constants.COLOR_BUTTON_SIZE / 2,
-                                  Constants.COLOR_PICKER_HEIGHT / 3 - Constants.COLOR_BUTTON_SIZE / 2,
+                                  (i + 1) * Constants.SCREEN_WIDTH / (number_of_colors + 1) - Constants.COLOR_BUTTON_SIZE / 2,
+                                  Constants.COLOR_PICKER_HEIGHT / 2 - Constants.COLOR_BUTTON_SIZE / 2,
                                   style,
                                   self.activate_button, i))
         self.update_surface()
