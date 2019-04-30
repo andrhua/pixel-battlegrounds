@@ -51,7 +51,7 @@ class InputProcessor:
     def on_mouse_click(self):
         pass
 
-    def on_mouse_drag(self, delta_x, delta_y):
+    def on_mouse_drag(self, dx, dy):
         pass
 
     def check_click(self):

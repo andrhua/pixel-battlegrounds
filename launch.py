@@ -23,9 +23,10 @@ class PixelBattlegroundsGame:
         firebase = pyrebase.initialize_app(config)
         auth = firebase.auth()
 
-        path = 'data'
-        if not os.path.exists(path):
-            os.makedirs(path)
+        paths = ['data', 'Saved battlegrounds']
+        for path in paths:
+            if not os.path.exists(path):
+                os.makedirs(path)
 
         pygame.init()
         pygame.key.set_repeat(400, 50)

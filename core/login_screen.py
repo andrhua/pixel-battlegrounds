@@ -84,7 +84,7 @@ class LoginScreen(Screen):
         style_status = TextLabelStyle(Assets.font_small, Colors.GREY, None, Align.center)
         style_edit_text = TextFormStyle(Assets.font_regular, Colors.BLACK, Colors.GREY, Colors.WHITE, Align.center)
         self.add_widget('app_label', TextLabel(i18n.APP_NAME,
-                                               Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT / 2,
+                                               Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT * .45,
                                                style_logo).center())
         # self.add_widget('login', TextLabel('sign in / register',
         #                                    Constants.SCREEN_WIDTH / 2, .45 * Constants.SCREEN_HEIGHT,

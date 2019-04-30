@@ -101,6 +101,9 @@ class Bot(Conqueror):
         else:
             self.conquer(0, 0, None)
 
+    def set_cooldown(self, value):
+        pass
+
     def conquer(self, x, y, new_color):
         super().conquer(x, y, new_color)
         i, color = self.project.get_random_pixel()

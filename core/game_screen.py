@@ -1,3 +1,4 @@
+import datetime
 import time
 
 import pygame
@@ -35,7 +36,7 @@ class GameScreen(Screen):
         self.battleground = self.session.battleground.get_surface()
         if self.player.cooldown_timer > 0:
             self.set_cooldown(True)
-        # self.bots = self.add_bots()
+        self.bots = self.add_bots()
         self.bots_flag = False
 
     def add_bots(self, num=1000):
@@ -152,8 +153,11 @@ class GameScreen(Screen):
                 self.player.conquer_pixel(x, y, Colors.GAME_PALETTE[self.color_picker.selected_color])
                 self.set_cooldown(True)
 
-    def on_mouse_drag(self, delta_x, delta_y):
-        self.move_camera(delta_x, delta_y)
+    def on_mouse_drag(self, dx, dy):
+        self.camera_x += dx * (self.camera.w / Constants.SCREEN_WIDTH)
+        self.camera_y += dy * (self.camera.h / Constants.SCREEN_HEIGHT)
+        self.camera.__setattr__('x', self.camera_x)
+        self.camera.__setattr__('y', self.camera_y)
 
     def process_input_event(self, e):
         super().process_input_event(e)
@@ -183,12 +187,6 @@ class GameScreen(Screen):
         else:
             self.target.dest = (-1, -1)
 
-    def move_camera(self, dx, dy):
-        self.camera_x += dx * (self.camera.w / Constants.SCREEN_WIDTH)
-        self.camera_y += dy * (self.camera.h / Constants.SCREEN_HEIGHT)
-        self.camera.__setattr__('x', self.camera_x)
-        self.camera.__setattr__('y', self.camera_y)
-
     def set_cooldown(self, value):
         if value:
             self.color_picker.reset_selection()
@@ -204,15 +202,24 @@ class GameScreen(Screen):
         super().exit()
 
     def on_key_down(self, key, unicode):
-        if unicode == 's':
+        if key == pygame.K_LSHIFT:
+            self.on_mouse_wheel_up()
+        elif key == pygame.K_LCTRL:
+            self.on_mouse_wheel_down()
+        elif key == pygame.K_ESCAPE:
+            self.exit()
+        elif key == pygame.K_s:
             self.save_battleground_to_image()
-        elif unicode == 'n':
+        elif key == pygame.K_n:
             self.create_new_project()
-        elif unicode == 'b':
+        elif key == pygame.K_b:
             self.launch_bots()
+        elif key == pygame.K_i:
+            self.toggle_ui()
 
     def save_battleground_to_image(self):
-        pygame.image.save(self.battleground, 'battle.png')
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        pygame.image.save(self.battleground, f'Saved battlegrounds/{timestamp}.png')
         self.notify(resources.i18n.CANVAS_SAVED)
 
     def create_new_project(self):
@@ -221,7 +228,13 @@ class GameScreen(Screen):
             bot.project = project
 
     def launch_bots(self):
-        self.bots_flag = True
+        self.bots_flag = not self.bots_flag
+        # self.notify())
+
+    def toggle_ui(self):
+        for name, w in self.widgets.items():
+            if name != 'cooldown_clock':
+                w.enabled = not w.enabled
 
 
 class Target:
