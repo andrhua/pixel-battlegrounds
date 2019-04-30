@@ -59,10 +59,6 @@ class GameScreen(Screen):
                         TextLabel('aaa,bbb', 0, Constants.SCREEN_HEIGHT - Constants.COLOR_PICKER_HEIGHT - self.get_widget('exit').height,
                                   label_style,
                                   ))
-        self.add_widget('save',
-                        TextButton('Save', 0, self.get_widget('exit').height,
-                                   button_style,
-                                   self.save_battleground_to_image))
         label_style.align = Align.center
         self.add_widget('cooldown_clock',
                         TextLabel('00:00', Constants.SCREEN_WIDTH / 2,

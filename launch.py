@@ -3,6 +3,7 @@ import sys
 
 import pygame
 import pyrebase
+import resources
 
 from core.game_screen import GameScreen
 from core.login_screen import LoginScreen
@@ -33,7 +34,7 @@ class PixelBattlegroundsGame:
         Assets()
         screen = pygame.display.set_mode((Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
         Constants(pygame.display.Info())
-        pygame.display.set_caption('Pixel Battlegrounds')
+        pygame.display.set_caption(resources.i18n.APP_NAME)
         screen.fill(Colors.ALMOST_WHITE)
         self.context = Context(self, firebase, auth)
         self.stop = False
@@ -46,8 +47,6 @@ class PixelBattlegroundsGame:
                 self.screen.process_input_event(e)
             self.screen.update(clock.tick_busy_loop())
             self.screen.draw()
-        # import threading
-        # print('\n'.join(map(lambda t: t.name, threading.enumerate())))
         pygame.display.quit()
         pygame.quit()
         sys.exit()
