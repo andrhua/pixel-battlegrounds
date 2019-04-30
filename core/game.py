@@ -12,28 +12,35 @@ from util.decorators import threaded
 
 
 class Session:
-    def __init__(self, game_screen, pixels_db, local_user_token):
+    def __init__(self, game_screen, db, local_user_token):
         self.game_screen = game_screen
-        self.pixels_db = pixels_db
+        self.db = db
         self.token = local_user_token
-        # self.clear_background(500, 500)
-        self.battleground = Battleground(self.pixels_db.get(self.token).val())
-        self.new_pixels_stream = pixels_db.stream(self.update_pixel, self.token)
+        self.clear_battleground(100, 100)
+        self.battleground = Battleground(self.db.child(util.constants.DB_PIXELS).get(self.token).val())
+        self.new_pixels_stream = db.stream(self.update_pixel, self.token)
 
-    def clear_background(self, width=Constants.BATTLEGROUND_WIDTH, height=Constants.BATTLEGROUND_HEIGHT):
+    def clear_battleground(self, width=Constants.BATTLEGROUND_WIDTH, height=Constants.BATTLEGROUND_HEIGHT):
         pixels = {}
         for i in range(width * height):
             pixels[str(i)] = {util.constants.DB_COLOR: get_random_palette_color()}
-        self.pixels_db.set(pixels, self.token)
+        self.db.child(util.constants.DB_PIXELS).set(pixels, self.token)
 
     def conquer_pixel(self, x, y, new_color, token):
-        self.pixels_db.child(str(x + y * Constants.BATTLEGROUND_WIDTH)).update({util.constants.DB_COLOR: new_color}, token)
+        self.db.child(util.constants.DB_PIXELS).child(str(x + y * Constants.BATTLEGROUND_WIDTH)).update({util.constants.DB_COLOR: new_color}, token)
 
     def update_pixel(self, pixel):
         number = int(pixel['path'][1:])
         x = number % Constants.BATTLEGROUND_WIDTH
         y = int((number - x) / Constants.BATTLEGROUND_WIDTH)
         self.battleground.set_pixel(x, y, pixel['data'][util.constants.DB_COLOR])
+
+    def set_local_canvas_to_global(self):
+        pixels = {}
+        for i in range(Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT):
+            x, y = i % Constants.BATTLEGROUND_WIDTH, i // Constants.BATTLEGROUND_HEIGHT
+            pixels[str(i)] = {util.constants.DB_COLOR: self.battleground.get_at(x, y)[:4]}
+        self.db.child(util.constants.DB_PIXELS).update(pixels, self.token)
 
 
 class Conqueror:
@@ -106,21 +113,23 @@ class Bot(Conqueror):
 
     def conquer(self, x, y, new_color):
         super().conquer(x, y, new_color)
-        i, color = self.project.get_random_pixel()
-        if i >= 0:
-            x, y = i % Constants.BATTLEGROUND_WIDTH, i // Constants.BATTLEGROUND_HEIGHT
+        if self.project is not None:
+            i, color = self.project.get_random_pixel()
+            if i >= 0:
+                x, y = i % Constants.BATTLEGROUND_WIDTH, i // Constants.BATTLEGROUND_HEIGHT
+                self.battleground.set_pixel(x, y, color)
             # self.battleground.set_pixel(
             #     randint(0, Constants.BATTLEGROUND_WIDTH - 1),
             #     randint(0, Constants.BATTLEGROUND_HEIGHT - 1),
             #     Colors.GAME_PALETTE[13]
             # )
-            self.battleground.set_pixel(x, y, color)
 
 
 class ImageProject:
-    def __init__(self, picture_url='https://source.unsplash.com/random/500x500'):
+    def __init__(self, picture_url='https://source.unsplash.com/random/100x100'):
         response = requests.get(picture_url)
         img = Image.open(BytesIO(response.content))
+        # img = Image.open('/home/andrhua/cock.png')
         # if img.width > Constants.SCREEN_WIDTH or img.height > Constants.SCREEN_HEIGHT:
         #     img.resize((500, 500), Image.LANCZOS)
         self.pixels = list(img.getdata())[:Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT]

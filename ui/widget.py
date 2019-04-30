@@ -75,7 +75,7 @@ class SpriteImage(Widget):
 
 class Battleground:
     def __init__(self, pixels):
-        self.surface = pygame.Surface([Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT]).convert_alpha()
+        self.surface = pygame.Surface([Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT])
         self.surface.fill(Colors.ALMOST_WHITE)
         for y in range(0, Constants.BATTLEGROUND_HEIGHT):
             for x in range(0, Constants.BATTLEGROUND_WIDTH):
@@ -88,4 +88,5 @@ class Battleground:
         self.surface.set_at((x, y), new_color)
 
     def get_at(self, x, y):
-        return self.surface.get_at((x, y))
+        color = self.surface.get_at((x, y))
+        return color.r, color.g, color.b

@@ -29,7 +29,7 @@ class GameScreen(Screen):
         self.passed_time = 0
         self.projection = None
         self.target = Target()
-        self.session = Session(self, self.context.firebase.database().child(util.constants.DB_PIXELS),
+        self.session = Session(self, self.context.firebase.database(),
                                self.context.get_local_user_token())
         self.player = Player(self.context.user, self.session, self.load(util.constants.LOCAL_SAVE_COOLDOWN_TIME),
                              self.load(util.constants.LOCAL_SAVE_LAST_LOGOUT_TIMESTAMP))
@@ -39,11 +39,10 @@ class GameScreen(Screen):
         self.bots = self.add_bots()
         self.bots_flag = False
 
-    def add_bots(self, num=1000):
-        project = ImageProject()
+    def add_bots(self, num=50):
         bots = []
         for i in range(num):
-            bots.append(Bot(self.session, project))
+            bots.append(Bot(self.session, None))
         return bots
 
     def init_ui(self):
@@ -212,6 +211,8 @@ class GameScreen(Screen):
             self.launch_bots()
         elif key == pygame.K_i:
             self.toggle_ui()
+        elif key == pygame.K_a:
+            self.session.set_local_canvas_to_global()
 
     def save_battleground_to_image(self):
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
