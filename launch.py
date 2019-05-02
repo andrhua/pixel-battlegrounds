@@ -47,6 +47,7 @@ class PixelBattlegroundsGame:
                 self.screen.process_input_event(e)
             self.screen.update(clock.tick_busy_loop())
             self.screen.draw()
+            pygame.display.update()
         pygame.display.quit()
         pygame.quit()
         sys.exit()

@@ -73,13 +73,13 @@ class SpriteImage(Widget):
             surface.blit(self.image, self.position, self.frame)
 
 
-class Battleground:
+class Canvas:
     def __init__(self, pixels):
-        self.surface = pygame.Surface([Constants.BATTLEGROUND_WIDTH, Constants.BATTLEGROUND_HEIGHT])
+        self.surface = pygame.Surface([Constants.CANVAS_SIZE, Constants.CANVAS_SIZE])
         self.surface.fill(Colors.ALMOST_WHITE)
-        for y in range(0, Constants.BATTLEGROUND_HEIGHT):
-            for x in range(0, Constants.BATTLEGROUND_WIDTH):
-                self.set_pixel(x, y, pixels[x + Constants.BATTLEGROUND_WIDTH * y][util.constants.DB_COLOR])
+        for y in range(0, Constants.CANVAS_SIZE):
+            for x in range(0, Constants.CANVAS_SIZE):
+                self.set_pixel(x, y, pixels[x + Constants.CANVAS_SIZE * y][util.constants.DB_COLOR])
 
     def get_surface(self):
         return self.surface

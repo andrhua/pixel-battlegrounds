@@ -6,6 +6,7 @@ import util.constants
 import resources.i18n
 from pygame import Rect
 
+from core.camera import Camera
 from core.screen import Screen
 from core.game import Session, Player, Bot, ImageProject
 from resources.assets import Assets
@@ -20,20 +21,14 @@ class GameScreen(Screen):
     def __init__(self, context):
         super().__init__(context)
         self.color_picker = self.get_widget('color_picker')
-        self.camera = Rect(0, 0, Constants.BATTLEGROUND_WIDTH,
-                           Constants.BATTLEGROUND_WIDTH * Constants.SCREEN_HEIGHT / Constants.SCREEN_WIDTH)
-        self.is_cooldown = False
-        self.camera_x = 0
-        self.camera_y = 0
-        self.count = 0
+        self.camera = Camera()
         self.passed_time = 0
         self.projection = None
-        self.target = Target()
         self.session = Session(self, self.context.firebase.database(),
                                self.context.get_local_user_token())
         self.player = Player(self.context.user, self.session, self.load(util.constants.LOCAL_SAVE_COOLDOWN_TIME),
                              self.load(util.constants.LOCAL_SAVE_LAST_LOGOUT_TIMESTAMP))
-        self.battleground = self.session.battleground.get_surface()
+        self.canvas = self.session.canvas.get_surface()
         if self.player.cooldown_timer > 0:
             self.set_cooldown(True)
         self.bots = self.add_bots()
@@ -82,9 +77,8 @@ class GameScreen(Screen):
         self.get_widget('cooldown_clock').set_text(f'{minutes:02}:{seconds:02}')
 
     def update_pointer(self):
-        x, y = pygame.mouse.get_pos()
-        x = int(x * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
-        y = Constants.BATTLEGROUND_HEIGHT - int(y * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y) - 1
+        x, y = self.global_to_canvas(*pygame.mouse.get_pos())
+        y = Constants.CANVAS_SIZE - y - 1
         self.get_widget('location').set_text(f'{x},{y}')
 
     def update(self, delta):
@@ -101,39 +95,29 @@ class GameScreen(Screen):
         super().update(delta)
 
     def draw_background(self, screen):
-        camera_surface = pygame.Surface((self.camera.w, self.camera.h))
-        camera_surface.fill(Colors.ALMOST_WHITE)
-        camera_surface.blit(self.battleground, (0, 0), Rect(self.camera.x, self.camera.y, self.camera.w, self.camera.h))
-        camera_surface = pygame.transform.scale(camera_surface, (Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
-        screen.blit(camera_surface, (0, 0))
+        size = int(self.camera.get_size())
+        canvas = pygame.transform.scale(self.canvas, (size, size))
+        screen.fill(Colors.ALMOST_WHITE)
+        screen.blit(canvas, (self.camera.x, self.camera.y))
+
+    def get_pixel_size(self):
+        return self.camera.scale
 
     def draw_projection(self):
         if self.color_picker.selected_color != -1:
-            if self.target.different and self.target.prev_color is not None:
-                self.target.different = False
-                pygame.draw.rect(self.battleground, self.target.prev_color,
-                                 Rect(self.target.prev_dest[0], self.target.prev_dest[1], 1, 1))
-            pygame.draw.rect(self.battleground,
-                             self.target.target_color if not self.target.gone else self.target.curr_color,
-                             Rect(self.target.dest[0], self.target.dest[1], 1, 1))
+            x, y = pygame.mouse.get_pos()
+            size = self.camera.get_pixel_size()
+            pygame.draw.rect(self.surface, self.color_picker.get_selection(), Rect(x - size / 2, y - size / 2, size, size))
 
     def draw(self):
         super().draw()
         self.draw_projection()
 
     def on_mouse_wheel_up(self):
-        offset_x = -self.camera.w * Constants.ZOOM_STEP
-        offset_y = -self.camera.h * Constants.ZOOM_STEP
-        if self.camera.w + offset_x <= Constants.UPSCALE_BOUND:
-            offset_x, offset_y = 0, 0
-        self.scale_camera(offset_x, offset_y)
+        self.camera.scale_by(Constants.ZOOM_STEP)
 
     def on_mouse_wheel_down(self):
-        offset_x = self.camera.w * Constants.ZOOM_STEP
-        offset_y = self.camera.h * Constants.ZOOM_STEP
-        if self.camera.w + offset_x > Constants.DOWNSCALE_BOUND:
-            offset_x, offset_y = 0, 0
-        self.scale_camera(offset_x, offset_y)
+        self.camera.scale_by(-Constants.ZOOM_STEP)
 
     def on_mouse_click(self):
         x, y = pygame.mouse.get_pos()
@@ -142,45 +126,19 @@ class GameScreen(Screen):
             if hit_some_widget:
                 return
         if self.color_picker.selected_color != -1:
-            x = int(self.last_down_position[0] * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
-            y = int(self.last_down_position[1] * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
-            if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
+            x, y = self.global_to_canvas(x, y)
+            if 0 <= x < Constants.CANVAS_SIZE and 0 <= y < Constants.CANVAS_SIZE:
                 self.player.conquer_pixel(x, y, Colors.GAME_PALETTE[self.color_picker.selected_color])
                 self.set_cooldown(True)
 
     def on_mouse_drag(self, dx, dy):
-        self.camera_x += dx * (self.camera.w / Constants.SCREEN_WIDTH)
-        self.camera_y += dy * (self.camera.h / Constants.SCREEN_HEIGHT)
-        self.camera.__setattr__('x', self.camera_x)
-        self.camera.__setattr__('y', self.camera_y)
+        self.camera.move(-dx, -dy)
 
-    def process_input_event(self, e):
-        super().process_input_event(e)
-        self.check_fill()
+    def global_to_canvas(self, x, y):
+        return int((x - self.camera.x) / self.camera.scale), int((y - self.camera.y) / self.camera.scale)
 
-    def scale_camera(self, offset_x, offset_y):
-        self.camera.inflate_ip(offset_x, offset_y)
-        self.camera_x -= offset_x / 2
-        self.camera_y -= offset_y / 2
-        self.camera.__setattr__('x', self.camera_x)
-        self.camera.__setattr__('y', self.camera_y)
-
-    def check_fill(self):
-        if self.color_picker.selected_color != -1:
-            x, y = pygame.mouse.get_pos()
-            if y <= Constants.SCREEN_HEIGHT - Constants.COLOR_PICKER_HEIGHT:
-                self.target.gone = False
-                x = int(x * (self.camera.w / Constants.SCREEN_WIDTH) + self.camera.x)
-                y = int(y * (self.camera.h / Constants.SCREEN_HEIGHT) + self.camera.y)
-                if 0 <= x < Constants.BATTLEGROUND_WIDTH and 0 <= y < Constants.BATTLEGROUND_HEIGHT:
-                    self.target.commit((x, y), Colors.GAME_PALETTE[self.color_picker.selected_color],
-                                       self.session.battleground.get_at(x, y))
-                else:
-                    self.target.gone = True
-            else:
-                self.target.gone = True
-        else:
-            self.target.dest = (-1, -1)
+    def canvas_to_global(self, position):
+        pass
 
     def set_cooldown(self, value):
         if value:
@@ -216,7 +174,7 @@ class GameScreen(Screen):
 
     def save_battleground_to_image(self):
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-        pygame.image.save(self.battleground, f'Saved battlegrounds/{timestamp}.png')
+        pygame.image.save(self.canvas, f'Saved battlegrounds/{timestamp}.png')
         self.notify(resources.i18n.CANVAS_SAVED)
 
     def create_new_project(self):
@@ -232,26 +190,3 @@ class GameScreen(Screen):
         for name, w in self.widgets.items():
             if name != 'cooldown_clock':
                 w.enabled = not w.enabled
-
-
-class Target:
-    def __init__(self):
-        self.dest = (-1, -1)
-        self.target_color = (0, 0, 0, 255)
-        self.curr_color = (0, 0, 0)
-        self.prev_dest = None
-        self.prev_color = None
-        self.different = False
-        self.gone = False
-
-    def commit(self, dest, target_color, curr_color):
-        if self.dest[0] != dest[0] or self.dest[1] != dest[1]:
-            self.prev_dest = self.dest
-            self.prev_color = self.curr_color
-            self.dest = dest
-            self.target_color = target_color
-            self.curr_color = curr_color
-            self.different = True
-
-    def __str__(self):
-        return self.dest, self.target_color, self.curr_color

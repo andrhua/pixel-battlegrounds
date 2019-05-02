@@ -6,7 +6,7 @@ from PIL import Image
 
 import util.constants
 from resources.colors import get_random_palette_color, get_closest_game_palette_color_to
-from ui.widget import Battleground
+from ui.widget import Canvas
 from util.constants import Constants
 from util.decorators import threaded
 
@@ -16,30 +16,31 @@ class Session:
         self.game_screen = game_screen
         self.db = db
         self.token = local_user_token
-        self.clear_battleground(100, 100)
-        self.battleground = Battleground(self.db.child(util.constants.DB_PIXELS).get(self.token).val())
+        self.clear_canvas(100)
+        self.canvas = Canvas(self.db.child(util.constants.DB_PIXELS).get(self.token).val())
         self.new_pixels_stream = db.stream(self.update_pixel, self.token)
 
-    def clear_battleground(self, width=Constants.BATTLEGROUND_WIDTH, height=Constants.BATTLEGROUND_HEIGHT):
+    def clear_canvas(self, size=Constants.CANVAS_SIZE):
         pixels = {}
-        for i in range(width * height):
+        for i in range(size**2):
             pixels[str(i)] = {util.constants.DB_COLOR: get_random_palette_color()}
         self.db.child(util.constants.DB_PIXELS).set(pixels, self.token)
 
     def conquer_pixel(self, x, y, new_color, token):
-        self.db.child(util.constants.DB_PIXELS).child(str(x + y * Constants.BATTLEGROUND_WIDTH)).update({util.constants.DB_COLOR: new_color}, token)
+        self.canvas.set_pixel(x, y, new_color)
+        self.db.child(util.constants.DB_PIXELS).child(str(x + y * Constants.CANVAS_SIZE)).update({util.constants.DB_COLOR: new_color}, token)
 
     def update_pixel(self, pixel):
         number = int(pixel['path'][1:])
-        x = number % Constants.BATTLEGROUND_WIDTH
-        y = int((number - x) / Constants.BATTLEGROUND_WIDTH)
-        self.battleground.set_pixel(x, y, pixel['data'][util.constants.DB_COLOR])
+        x = number % Constants.CANVAS_SIZE
+        y = int((number - x) / Constants.CANVAS_SIZE)
+        self.canvas.set_pixel(x, y, pixel['data'][util.constants.DB_COLOR])
 
     def set_local_canvas_to_global(self):
         pixels = {}
-        for i in range(Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT):
-            x, y = i % Constants.BATTLEGROUND_WIDTH, i // Constants.BATTLEGROUND_HEIGHT
-            pixels[str(i)] = {util.constants.DB_COLOR: self.battleground.get_at(x, y)[:4]}
+        for i in range(Constants.CANVAS_SIZE**2):
+            x, y = i % Constants.CANVAS_SIZE, i // Constants.CANVAS_SIZE
+            pixels[str(i)] = {util.constants.DB_COLOR: self.canvas.get_at(x, y)[:4]}
         self.db.child(util.constants.DB_PIXELS).update(pixels, self.token)
 
 
@@ -97,7 +98,7 @@ class Player(Conqueror):
 class Bot(Conqueror):
     def __init__(self, session, image_project):
         super().__init__()
-        self.battleground = session.battleground
+        self.canvas = session.canvas
         self.project = image_project
 
     def update(self, delta):
@@ -116,8 +117,8 @@ class Bot(Conqueror):
         if self.project is not None:
             i, color = self.project.get_random_pixel()
             if i >= 0:
-                x, y = i % Constants.BATTLEGROUND_WIDTH, i // Constants.BATTLEGROUND_HEIGHT
-                self.battleground.set_pixel(x, y, color)
+                x, y = i % Constants.CANVAS_SIZE, i // Constants.CANVAS_SIZE
+                self.canvas.set_pixel(x, y, color)
             # self.battleground.set_pixel(
             #     randint(0, Constants.BATTLEGROUND_WIDTH - 1),
             #     randint(0, Constants.BATTLEGROUND_HEIGHT - 1),
@@ -132,7 +133,7 @@ class ImageProject:
         # img = Image.open('/home/andrhua/cock.png')
         # if img.width > Constants.SCREEN_WIDTH or img.height > Constants.SCREEN_HEIGHT:
         #     img.resize((500, 500), Image.LANCZOS)
-        self.pixels = list(img.getdata())[:Constants.BATTLEGROUND_WIDTH * Constants.BATTLEGROUND_HEIGHT]
+        self.pixels = list(img.getdata())[:Constants.CANVAS_SIZE**2]
         self.indices = [i for i in range(len(self.pixels))]
         self.completed = False
         shuffle(self.indices)

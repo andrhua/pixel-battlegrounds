@@ -105,7 +105,6 @@ class Screen(InputProcessor):
         self.draw_background(self.surface)
         for w in self.widgets.values():
             w.draw(self.surface)
-        pygame.display.flip()
 
     def draw_background(self, screen):
         self.surface.fill(Colors.WHITE)

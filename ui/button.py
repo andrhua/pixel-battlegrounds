@@ -120,6 +120,9 @@ class ColorPicker(Widget):
         self.selected_color = -1
         self.update_surface()
 
+    def get_selection(self):
+        return None if self.selected_color == -1 else Colors.GAME_PALETTE[self.selected_color]
+
     def hit(self, x, y):
         if self.enabled:
             for i, button in enumerate(self.children):
