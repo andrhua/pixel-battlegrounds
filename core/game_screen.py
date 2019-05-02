@@ -114,10 +114,12 @@ class GameScreen(Screen):
         self.draw_projection()
 
     def on_mouse_wheel_up(self):
-        self.camera.scale_by(Constants.ZOOM_STEP)
+        x, y = self.global_to_canvas(Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT / 2)
+        self.camera.scale_by(Constants.ZOOM_STEP, x, y)
 
     def on_mouse_wheel_down(self):
-        self.camera.scale_by(-Constants.ZOOM_STEP)
+        x, y = self.global_to_canvas(Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT / 2)
+        self.camera.scale_by(-Constants.ZOOM_STEP, x, y)
 
     def on_mouse_click(self):
         x, y = pygame.mouse.get_pos()

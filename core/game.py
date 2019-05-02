@@ -16,7 +16,7 @@ class Session:
         self.game_screen = game_screen
         self.db = db
         self.token = local_user_token
-        self.clear_canvas(100)
+        # self.clear_canvas(100)
         self.canvas = Canvas(self.db.child(util.constants.DB_PIXELS).get(self.token).val())
         self.new_pixels_stream = db.stream(self.update_pixel, self.token)
 
