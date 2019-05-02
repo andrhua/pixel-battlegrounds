@@ -11,12 +11,13 @@ class Camera:
         self.rect = Rect(0, 0, Constants.CANVAS_SIZE, Constants.CANVAS_SIZE)
         self.center_x = Constants.SCREEN_WIDTH / 2
         self.center_y = Constants.SCREEN_HEIGHT / 2
+        self.fit_and_center()
 
     def move(self, dx, dy):
         self.x += dx
         self.y += dy
 
-    def scale_by(self, amount, anchor_x, anchor_y):
+    def scale_by(self, amount):
         old_scale = self.scale
         self.scale += amount * self.scale
         self.scale = max(Constants.DOWNSCALE_BOUND, self.scale)
@@ -25,10 +26,9 @@ class Camera:
         scale = self.scale / old_scale
         self.x = scale * (self.x - self.center_x) + self.center_x
         self.y = scale * (self.y - self.center_y) + self.center_y
-        print(self.x, self.y)
 
     def scale_to(self, scale):
-        self.scale = scale
+        self.scale_by(scale - self.scale)
 
     def get_pixel_size(self):
         return self.scale
@@ -41,3 +41,9 @@ class Camera:
         self.rect.width = size
         self.rect.height = size
         return self.rect
+
+    def fit_and_center(self):
+        self.scale_to(Constants.DOWNSCALE_BOUND)
+        size = self.get_size()
+        self.x = self.center_x - size / 2
+        self.y = self.center_y - size / 2

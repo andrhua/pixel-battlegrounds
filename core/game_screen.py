@@ -2,13 +2,13 @@ import datetime
 import time
 
 import pygame
-import util.constants
-import resources.i18n
 from pygame import Rect
 
+import resources.i18n
+import util.constants
 from core.camera import Camera
-from core.screen import Screen
 from core.game import Session, Player, Bot, ImageProject
+from core.screen import Screen
 from resources.assets import Assets
 from resources.colors import Colors
 from ui.button import ColorPicker, TextButton
@@ -43,10 +43,10 @@ class GameScreen(Screen):
     def init_ui(self):
         self.add_widget('color_picker', ColorPicker(Colors.SEMITRANSPARENT_BLACK))
         label_style = TextLabelStyle(Assets.font_small, Colors.WHITE, Colors.SEMITRANSPARENT_BLACK, Align.left)
-        button_style = TextButtonStyle(Assets.font_small, Colors.WHITE, Colors.WHITE, Colors.BLACK)
+        text_button_style = TextButtonStyle(Assets.font_small, Colors.WHITE, Colors.WHITE, Colors.BLACK)
         self.add_widget('exit',
                         TextButton('Exit', 0, 0,
-                                   button_style,
+                                   text_button_style,
                                    self.exit)
                         )
         self.add_widget('location',
@@ -114,12 +114,10 @@ class GameScreen(Screen):
         self.draw_projection()
 
     def on_mouse_wheel_up(self):
-        x, y = self.global_to_canvas(Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT / 2)
-        self.camera.scale_by(Constants.ZOOM_STEP, x, y)
+        self.camera.scale_by(Constants.ZOOM_STEP)
 
     def on_mouse_wheel_down(self):
-        x, y = self.global_to_canvas(Constants.SCREEN_WIDTH / 2, Constants.SCREEN_HEIGHT / 2)
-        self.camera.scale_by(-Constants.ZOOM_STEP, x, y)
+        self.camera.scale_by(-Constants.ZOOM_STEP)
 
     def on_mouse_click(self):
         x, y = pygame.mouse.get_pos()
@@ -138,9 +136,6 @@ class GameScreen(Screen):
 
     def global_to_canvas(self, x, y):
         return int((x - self.camera.x) / self.camera.scale), int((y - self.camera.y) / self.camera.scale)
-
-    def canvas_to_global(self, position):
-        pass
 
     def set_cooldown(self, value):
         if value:
@@ -164,7 +159,7 @@ class GameScreen(Screen):
         elif key == pygame.K_ESCAPE:
             self.exit()
         elif key == pygame.K_s:
-            self.save_battleground_to_image()
+            self.save_canvas_to_image()
         elif key == pygame.K_n:
             self.create_new_project()
         elif key == pygame.K_b:
@@ -174,9 +169,9 @@ class GameScreen(Screen):
         elif key == pygame.K_a:
             self.session.set_local_canvas_to_global()
 
-    def save_battleground_to_image(self):
+    def save_canvas_to_image(self):
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-        pygame.image.save(self.canvas, f'Saved battlegrounds/{timestamp}.png')
+        pygame.image.save(self.canvas, f'Saved canvases/{timestamp}.png')
         self.notify(resources.i18n.CANVAS_SAVED)
 
     def create_new_project(self):

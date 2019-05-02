@@ -33,6 +33,8 @@ class Button(Widget):
 
     def on_hit(self):
         self.pressed = not self.pressed
+        self.surface = pygame.transform.scale(self.surface,
+                               (self.pressed_width, self.pressed_height) if self.pressed else (self.width, self.height))
         self.run_on_hit(*self.args, **self.kwargs)
 
 
@@ -78,6 +80,15 @@ class TextButton(Button):
         pygame.draw.rect(self.surface, self.style.background_color, Rect(1, 1, self.width - 2, self.height - 2))
         self.surface.blit(self.style.font.render(self.text, True, self.style.text_color, self.style.background_color),
                           (self.text_x, self.text_y))
+
+
+class ImageButton(Button):
+    def __init__(self, image, width, height, x, y, style, run_on_hit, *args, **kwargs):
+        super().__init__(width, height, x, y, style, run_on_hit, *args, **kwargs)
+        self.surface = pygame.transform.scale(image, (width, height))
+
+    def on_hit(self):
+        pass
 
 
 class ColorPicker(Widget):

@@ -11,8 +11,8 @@ class Constants:
     COOLDOWN = 10 * 1000
     CANVAS_SIZE = 100
     ZOOM_STEP = 0.1
-    UPSCALE_BOUND = 20
-    DOWNSCALE_BOUND = 4
+    UPSCALE_BOUND = 25
+    DOWNSCALE_BOUND = 6
     FONT_REGULAR = 40
     FONT_LOGO = 60
     FONT_SMALL = 25
@@ -27,6 +27,7 @@ class Constants:
     SCREEN_HEIGHT = 720
     COLOR_PICKER_HEIGHT = 0
     NOTIFICATION_TIMEOUT = 4 * 1000
+    UI_BUTTON_SIZE = 25
 
     def __init__(self, display_info):
         # Constants.SCREEN_WIDTH = display_info.current_w
